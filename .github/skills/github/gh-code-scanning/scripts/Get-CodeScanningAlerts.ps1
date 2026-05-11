@@ -88,7 +88,7 @@ if ($MyInvocation.InvocationName -ne '.') {
             $paths = @(
                 $_.Group |
                 ForEach-Object { $_.most_recent_instance.location.path } |
-                Where-Object { $_ -and $_ -notmatch '(?i)no file' } |
+                Where-Object { $_ -and $_ -ne 'no file associated with this alert' } |
                 Sort-Object -Unique
             )
             [PSCustomObject]@{

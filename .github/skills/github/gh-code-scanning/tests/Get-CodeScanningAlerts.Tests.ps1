@@ -7,7 +7,7 @@ BeforeAll {
     $script:OriginalGhPager = $env:GH_PAGER
 
     # Sample alert JSON representing two rules with multiple occurrences
-    $script:MockAlertJson = '[{"number":1,"rule":{"id":"js/sql-injection","description":"Database query built from user-controlled sources","security_severity_level":"high"},"tool":{"name":"CodeQL"},"most_recent_instance":{"location":{"path":"src/db.js"}}},{"number":2,"rule":{"id":"js/sql-injection","description":"Database query built from user-controlled sources","security_severity_level":"high"},"tool":{"name":"CodeQL"},"most_recent_instance":{"location":{"path":"src/api.js"}}},{"number":3,"rule":{"id":"js/xss","description":"Cross-site scripting vulnerability","security_severity_level":"medium"},"tool":{"name":"CodeQL"},"most_recent_instance":{"location":{"path":"src/render.js"}}}]'
+    $script:MockAlertJson = '[{"number":1,"rule":{"id":"js/sql-injection","description":"Database query built from user-controlled sources","security_severity_level":"high","severity":"error"},"tool":{"name":"CodeQL"},"html_url":"https://github.com/owner/repo/security/code-scanning/1","most_recent_instance":{"location":{"path":"src/db.js"},"message":{"text":"SQL injection from user input"}}},{"number":2,"rule":{"id":"js/sql-injection","description":"Database query built from user-controlled sources","security_severity_level":"high","severity":"error"},"tool":{"name":"CodeQL"},"html_url":"https://github.com/owner/repo/security/code-scanning/2","most_recent_instance":{"location":{"path":"src/api.js"},"message":{"text":"SQL injection from user input"}}},{"number":3,"rule":{"id":"js/xss","description":"Cross-site scripting vulnerability","security_severity_level":"medium","severity":"warning"},"tool":{"name":"CodeQL"},"html_url":"https://github.com/owner/repo/security/code-scanning/3","most_recent_instance":{"location":{"path":"src/render.js"},"message":{"text":"Unsanitized input rendered"}}}]'
 }
 
 AfterAll {
@@ -121,6 +121,27 @@ Describe 'Get-CodeScanningAlerts' -Tag 'Unit' {
             $parsed[0].AffectedPaths | Should -HaveCount 2
             $parsed[0].AffectedPaths[0] | Should -Be 'scripts/a.py'
             $parsed[0].AffectedPaths[1] | Should -Be 'scripts/b.py'
+        }
+
+        It 'Includes Severity field in grouped output' {
+            $result = & $script:ScriptPath -Owner 'testorg' -Repo 'testrepo' -OutputFormat Json
+            $parsed = $result | ConvertFrom-Json
+
+            $parsed[0].Severity | Should -Be 'error'
+        }
+
+        It 'Includes AlertUrl field in grouped output' {
+            $result = & $script:ScriptPath -Owner 'testorg' -Repo 'testrepo' -OutputFormat Json
+            $parsed = $result | ConvertFrom-Json
+
+            $parsed[0].AlertUrl | Should -Match '/security/code-scanning/'
+        }
+
+        It 'Includes FindingDescription field in grouped output' {
+            $result = & $script:ScriptPath -Owner 'testorg' -Repo 'testrepo' -OutputFormat Json
+            $parsed = $result | ConvertFrom-Json
+
+            $parsed[0].FindingDescription | Should -Not -BeNullOrEmpty
         }
     }
 

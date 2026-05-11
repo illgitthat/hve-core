@@ -70,8 +70,8 @@ Workflow tags must respect the 25-character cap from [mural-writing-style.instru
 
 Three agents pull these conventions via the `applyTo` glob in this file's frontmatter. Each agent owns its own decomposition rules and cardinality contracts, then references this file with `#file:` for the cross-cutting patterns above.
 
-| Customization file                                                               | Workflow            | Inline contract owned by the customization                                           |
-|----------------------------------------------------------------------------------|---------------------|--------------------------------------------------------------------------------------|
+| Customization file                                                                  | Workflow            | Inline contract owned by the customization                                           |
+|-------------------------------------------------------------------------------------|---------------------|--------------------------------------------------------------------------------------|
 | [dt-coach.agent.md](../../../agents/design-thinking/dt-coach.agent.md)              | DT board export     | Per-method binding map; trigger milestones for Methods 1/3/4/5/6                     |
 | [rai-planner.agent.md](../../../agents/rai-planning/rai-planner.agent.md)           | RAI Phase 2 seeding | A1 / A2 / A3 wedge bindings; per-area cardinality assertion; `state.json` write-back |
 | [ux-ui-designer.agent.md](../../../agents/project-planning/ux-ui-designer.agent.md) | UX research seeding | JTBD / Journey / Pain / Opportunity / Accessibility decomposition                    |

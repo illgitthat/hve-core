@@ -173,6 +173,15 @@ function Test-PythonSkillConfig {
         if ($content -notmatch '\[tool\.pytest') {
             $errors.Add("pyproject.toml missing [tool.pytest.ini_options] section in '$RelativePath' (tests/ directory exists)")
         }
+
+        # When tests/ exists, [tool.ruff.lint].select must include 'I' (isort)
+        # so import-order regressions in test files cannot ship past lint:py.
+        if ($content -match '\[tool\.ruff\.lint\][\s\S]*?select\s*=\s*\[([\s\S]*?)\]') {
+            $selectArray = $Matches[1]
+            if ($selectArray -notmatch '"I"|''I''') {
+                $errors.Add("pyproject.toml [tool.ruff.lint].select must include 'I' (isort) in '$RelativePath' (tests/ directory exists)")
+            }
+        }
     }
 
     # Require ruff in dev dependencies (inline or multi-line TOML arrays)

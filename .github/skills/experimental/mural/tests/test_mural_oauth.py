@@ -557,6 +557,28 @@ def test_run_login_happy_path_persists_record(
     assert oct(os.stat(target).st_mode & 0o777) == "0o600"
 
 
+def test_run_login_default_http_rejects_token_endpoint_redirect(
+    mural_module: Any,
+) -> None:
+    # The _http default for _run_login must flow through the redirect-blocking
+    # opener so an attacker-controlled 30x from the token endpoint cannot
+    # exfiltrate the authorization code + client secret to a different host.
+    import inspect
+
+    sig = inspect.signature(mural_module._run_login)
+    assert sig.parameters["_http"].default == mural_module._TOKEN_OPENER.open
+
+    with pytest.raises(mural_module.MuralAPIError) as excinfo:
+        mural_module._NoRedirect().http_error_307(
+            req=None,
+            fp=None,
+            code=307,
+            msg="",
+            headers={"Location": "https://attacker.example/steal"},
+        )
+    assert excinfo.value.code == "TOKEN_REDIRECT"
+
+
 # ---------------------------------------------------------------------------
 # _LoopbackHandler — direct request/response semantics
 # ---------------------------------------------------------------------------

@@ -667,7 +667,16 @@ class TestMuralFuzzHarness:
 
     @pytest.mark.parametrize(
         "value",
-        [None, "", 123, "x" * (mural._MAX_HYPERLINK_LEN + 1)],
+        [
+            None,
+            "",
+            123,
+            "x" * (mural._MAX_HYPERLINK_LEN + 1),
+            "javascript:alert(1)",
+            "data:text/html,x",
+            "vbscript:msg",
+            "file:///etc/passwd",
+        ],
     )
     def test_validate_hyperlink_rejects_invalid(self, value: object) -> None:
         with pytest.raises(mural.MuralValidationError):

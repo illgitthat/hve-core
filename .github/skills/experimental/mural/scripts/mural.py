@@ -510,26 +510,6 @@ _LINE_RE = re.compile(
 )
 
 
-def _load_env_file(path: pathlib.Path) -> dict[str, str]:
-    """Load credentials via the resolved backend.
-
-    Routes through :func:`resolve_backend` so credential reads honor
-    ``MURAL_CREDENTIAL_BACKEND`` (auto / keyring / file / env-only). The
-    ``path`` argument is preserved for callers that already resolved the
-    file location; the profile is derived from the filename and only the
-    canonical credential keys are returned.
-    """
-    profile = _profile_from_credential_path(path)
-    backend = resolve_backend(profile)
-    service = _service_name_for(profile)
-    result: dict[str, str] = {}
-    for key in _KNOWN_CREDENTIAL_KEYS:
-        value = backend.get(service, key)
-        if value:
-            result[key] = value
-    return result
-
-
 def _resolve_credential_file(
     profile_name: str,
     environ: Mapping[str, str] | None = None,
@@ -2309,7 +2289,7 @@ def _run_login(
     timeout_seconds: int = 300,
     open_browser: Callable[[str], bool] = webbrowser.open,
     server_factory: Callable[..., http.server.HTTPServer] = http.server.HTTPServer,
-    _http: Callable[..., Any] = urllib.request.urlopen,
+    _http: Callable[..., Any] = _TOKEN_OPENER.open,
     _now: Callable[[], float] = time.time,
 ) -> dict[str, Any]:
     src = env if env is not None else os.environ
@@ -2406,6 +2386,10 @@ _IMAGE_CONTENT_TYPES: dict[str, str] = {
 _MAX_TAG_TEXT_LEN = 25
 # Hyperlink href cap (defensive; Mural rejects very long URLs).
 _MAX_HYPERLINK_LEN = 1024
+# Hyperlink schemes Mural is allowed to render. Mural displays hyperlinks as
+# clickable affordances on shapes/sticky-notes, so dangerous schemes
+# (javascript:, data:, vbscript:, file:) are rejected at validation time.
+_ALLOWED_HYPERLINK_SCHEMES: frozenset[str] = frozenset({"http", "https", "mailto"})
 # Area layout values accepted by Mural's Areas API.
 _VALID_AREA_LAYOUTS: frozenset[str] = frozenset({"free", "column", "row"})
 
@@ -2657,16 +2641,29 @@ def _coerce_xy(value: Any, name: str) -> float:
 
 
 def _validate_hyperlink(value: Any) -> str:
-    """Return ``value`` after asserting it is a non-empty hyperlink string.
+    """Return ``value`` after asserting it is a safe hyperlink string.
 
-    Mural rejects very long hyperlink hrefs; cap defensively at
-    ``_MAX_HYPERLINK_LEN`` characters.
+    Enforces a non-empty string, a ``_MAX_HYPERLINK_LEN`` cap, and an
+    allowlist of URL schemes (``http``, ``https``, ``mailto``). Dangerous
+    schemes such as ``javascript:``, ``data:``, ``vbscript:``, and
+    ``file:`` are rejected because Mural surfaces hyperlinks as clickable
+    affordances on widgets and would otherwise enable cross-tenant
+    phishing or script execution against viewers.
     """
     if not isinstance(value, str) or not value:
         raise MuralValidationError("hyperlink must be a non-empty string")
     if len(value) > _MAX_HYPERLINK_LEN:
         raise MuralValidationError(
             f"hyperlink exceeds {_MAX_HYPERLINK_LEN}-character limit"
+        )
+    try:
+        scheme = urllib.parse.urlsplit(value).scheme.lower()
+    except ValueError as exc:
+        raise MuralValidationError(f"hyperlink is not a parseable URL: {exc}") from exc
+    if scheme not in _ALLOWED_HYPERLINK_SCHEMES:
+        allowed = ", ".join(sorted(_ALLOWED_HYPERLINK_SCHEMES))
+        raise MuralValidationError(
+            f"hyperlink scheme {scheme!r} is not allowed (allowed: {allowed})"
         )
     return value
 

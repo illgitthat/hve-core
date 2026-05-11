@@ -13,33 +13,29 @@ from typing import Any
 import pytest
 
 # ---------------------------------------------------------------------------
-# _load_env_file
+# FileBackend._read_all (env-file parser)
 # ---------------------------------------------------------------------------
 
 
-def test_load_env_file_parses_basic_kv(
+def test_file_backend_read_all_parses_basic_kv(
     mural_module: Any,
     tmp_path: pathlib.Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     path = tmp_path / "creds.env"
     path.write_text(
         "MURAL_CLIENT_ID=plain-id\nMURAL_CLIENT_SECRET=plain-secret\n",
         encoding="utf-8",
     )
-    monkeypatch.setenv("MURAL_CREDENTIAL_BACKEND", "file")
-    monkeypatch.setenv("MURAL_ENV_FILE", str(path))
-    result = mural_module._load_env_file(path)
-    assert result == {
+    backend = mural_module.FileBackend(path)
+    assert backend._read_all() == {
         "MURAL_CLIENT_ID": "plain-id",
         "MURAL_CLIENT_SECRET": "plain-secret",
     }
 
 
-def test_load_env_file_handles_export_quotes_comments_blanks(
+def test_file_backend_read_all_handles_export_quotes_comments_blanks(
     mural_module: Any,
     tmp_path: pathlib.Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     path = tmp_path / "creds.env"
     path.write_text(
@@ -51,27 +47,25 @@ def test_load_env_file_handles_export_quotes_comments_blanks(
         "MURAL_REFRESH_TOKEN='single-quoted'\n",
         encoding="utf-8",
     )
-    monkeypatch.setenv("MURAL_CREDENTIAL_BACKEND", "file")
-    monkeypatch.setenv("MURAL_ENV_FILE", str(path))
-    result = mural_module._load_env_file(path)
-    assert result == {
+    backend = mural_module.FileBackend(path)
+    assert backend._read_all() == {
         "MURAL_CLIENT_ID": "exported-id",
         "MURAL_CLIENT_SECRET": "quoted secret",
         "MURAL_REFRESH_TOKEN": "single-quoted",
     }
 
 
-def test_load_env_file_returns_empty_when_missing(
+def test_file_backend_read_all_returns_empty_when_missing(
     mural_module: Any, tmp_path: pathlib.Path
 ) -> None:
     missing = tmp_path / "does-not-exist.env"
-    assert mural_module._load_env_file(missing) == {}
+    backend = mural_module.FileBackend(missing)
+    assert backend._read_all() == {}
 
 
-def test_load_env_file_silently_skips_malformed_lines(
+def test_file_backend_read_all_silently_skips_malformed_lines(
     mural_module: Any,
     tmp_path: pathlib.Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     path = tmp_path / "creds.env"
     path.write_text(
@@ -82,10 +76,8 @@ def test_load_env_file_silently_skips_malformed_lines(
         "MURAL_CLIENT_SECRET=also-good\n",
         encoding="utf-8",
     )
-    monkeypatch.setenv("MURAL_CREDENTIAL_BACKEND", "file")
-    monkeypatch.setenv("MURAL_ENV_FILE", str(path))
-    result = mural_module._load_env_file(path)
-    assert result == {
+    backend = mural_module.FileBackend(path)
+    assert backend._read_all() == {
         "MURAL_CLIENT_ID": "good",
         "MURAL_CLIENT_SECRET": "also-good",
     }

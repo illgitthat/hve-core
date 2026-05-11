@@ -144,7 +144,7 @@ Devcontainer, Codespaces, and WSL2 contexts inherit the host operator's trust; t
 
 * All writes go through `os.open(O_WRONLY | O_CREAT | O_EXCL, 0o600)` followed by `os.replace` so partial writes are never observed.
 * Concurrent CLI and MCP writers serialize through an advisory lock on the sibling `<path>.lock` file (`fcntl.flock` on POSIX, `msvcrt.locking` on Windows), preventing interleaved writes from corrupting the v2 envelope (see [`scripts/mural.py`](scripts/mural.py) `_acquire_cache_lock`).
-* The credential-file parser performs no shell expansion and no `$VAR` interpolation; values are stored verbatim and matching surrounding quotes are stripped without further processing (see [`scripts/mural.py`](scripts/mural.py) `_load_env_file`). A tampered file therefore cannot escalate to subprocess execution via parsed values.
+* The credential-file parser performs no shell expansion and no `$VAR` interpolation; values are stored verbatim and matching surrounding quotes are stripped without further processing (see [`scripts/mural.py`](scripts/mural.py) `FileBackend._read_all`). A tampered file therefore cannot escalate to subprocess execution via parsed values.
 
 ### Repudiation
 

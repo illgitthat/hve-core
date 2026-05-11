@@ -148,7 +148,7 @@ Client ID and Client Secret are loaded from a per-user credential file when the 
 
 The loader uses `env.setdefault(key, value)`: an environment variable that is already exported wins over the file, so per-invocation overrides do not require editing the file. There is no `~/.mural.env` legacy fallback; if you created one based on a third-party tutorial, copy its contents to `$XDG_CONFIG_HOME/hve-core/mural.default.env` and run `chmod 0600` on it.
 
-On POSIX the runtime refuses to load a credential file whose mode includes group or world bits and tells you to run `chmod 0600 <path>`. Set `MURAL_ENV_FILE_RELAXED=1` to bypass the check (intended for ephemeral CI containers only; never set this on a workstation). The `_load_env_file` parser performs no shell expansion and no `$VAR` interpolation, so values are stored verbatim. `mural auth status` reports `credential_file` (resolved path) and `credential_file_exists` (boolean) so operators can inspect the active credential source without printing secrets.
+On POSIX the runtime refuses to load a credential file whose mode includes group or world bits and tells you to run `chmod 0600 <path>`. Set `MURAL_ENV_FILE_RELAXED=1` to bypass the check (intended for ephemeral CI containers only; never set this on a workstation). The `FileBackend._read_all` parser performs no shell expansion and no `$VAR` interpolation, so values are stored verbatim. `mural auth status` reports `credential_file` (resolved path) and `credential_file_exists` (boolean) so operators can inspect the active credential source without printing secrets.
 
 For MCP hosts, configure the launcher to inject Client ID and Client Secret as environment variables instead of relying on the credential file. VS Code (`.vscode/mcp.json`):
 

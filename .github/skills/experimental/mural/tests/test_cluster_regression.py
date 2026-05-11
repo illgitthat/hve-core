@@ -55,9 +55,7 @@ def test_build_arrow_graph_iteration_order_is_deterministic(
     first_summary = mural_module.arrow_graph_summary(first_graph)
 
     for _ in range(9):
-        graph = mural_module.build_arrow_graph(
-            widgets, arrows, snap_radius=snap_radius
-        )
+        graph = mural_module.build_arrow_graph(widgets, arrows, snap_radius=snap_radius)
         assert list(graph.nodes()) == first_nodes
         assert list(graph.edges(keys=True)) == first_edges
         summary = mural_module.arrow_graph_summary(graph)

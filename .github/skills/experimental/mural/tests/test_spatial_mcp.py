@@ -205,9 +205,7 @@ def test_spatial_widgets_in_region_round_trip_normalizes_negative_dimensions(
         return []
 
     monkeypatch.setattr(mural_module, "_paginate", _fake_paginate)
-    monkeypatch.setattr(
-        mural_module, "widgets_in_region", _fake_widgets_in_region
-    )
+    monkeypatch.setattr(mural_module, "widgets_in_region", _fake_widgets_in_region)
 
     responses = _drive(
         mural_module,

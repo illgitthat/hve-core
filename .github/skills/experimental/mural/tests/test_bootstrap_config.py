@@ -19,9 +19,7 @@ from typing import Any
 def test_default_login_scopes_is_union_of_read_and_write(
     mural_module: Any,
 ) -> None:
-    expected = " ".join(
-        mural_module.READ_SCOPES + mural_module.WRITE_SCOPES
-    )
+    expected = " ".join(mural_module.READ_SCOPES + mural_module.WRITE_SCOPES)
     assert mural_module.DEFAULT_LOGIN_SCOPES == expected
 
 
@@ -52,9 +50,7 @@ def test_default_scopes_is_read_only(mural_module: Any) -> None:
 def test_default_redirect_uri_uses_localhost_loopback(
     mural_module: Any,
 ) -> None:
-    assert mural_module.DEFAULT_REDIRECT_URI == (
-        "http://localhost:8765/callback"
-    )
+    assert mural_module.DEFAULT_REDIRECT_URI == ("http://localhost:8765/callback")
     assert "127.0.0.1" not in mural_module.DEFAULT_REDIRECT_URI
 
 
@@ -122,9 +118,7 @@ def test_bootstrap_no_test_flag_help_mentions_probe(
 ) -> None:
     parser = mural_module._build_parser()
     auth_action = next(
-        a
-        for a in parser._actions
-        if getattr(a, "dest", None) == "command"
+        a for a in parser._actions if getattr(a, "dest", None) == "command"
     )
     auth_subparsers = auth_action.choices["auth"]  # type: ignore[attr-defined]
     bootstrap_parser = auth_subparsers._actions[1].choices[  # type: ignore[attr-defined]

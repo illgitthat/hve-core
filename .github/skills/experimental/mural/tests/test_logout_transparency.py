@@ -93,13 +93,9 @@ def test_logout_all_non_json_emits_transparency(
     fake_token_store: pathlib.Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    _seed_envelope(
-        fake_token_store, {"default": _profile()}, active="default"
-    )
+    _seed_envelope(fake_token_store, {"default": _profile()}, active="default")
 
-    rc = mural_module.main(
-        ["auth", "logout", "--all", "--keep-credentials"]
-    )
+    rc = mural_module.main(["auth", "logout", "--all", "--keep-credentials"])
 
     assert rc == mural_module.EXIT_SUCCESS
     err = capsys.readouterr().err
@@ -112,13 +108,9 @@ def test_logout_all_json_omits_transparency(
     fake_token_store: pathlib.Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    _seed_envelope(
-        fake_token_store, {"default": _profile()}, active="default"
-    )
+    _seed_envelope(fake_token_store, {"default": _profile()}, active="default")
 
-    rc = mural_module.main(
-        ["auth", "logout", "--all", "--keep-credentials", "--json"]
-    )
+    rc = mural_module.main(["auth", "logout", "--all", "--keep-credentials", "--json"])
 
     assert rc == mural_module.EXIT_SUCCESS
     captured = capsys.readouterr()
@@ -139,9 +131,7 @@ def test_logout_all_clears_active_profile(
         active="alpha",
     )
 
-    rc = mural_module.main(
-        ["auth", "logout", "--all", "--keep-credentials"]
-    )
+    rc = mural_module.main(["auth", "logout", "--all", "--keep-credentials"])
 
     assert rc == mural_module.EXIT_SUCCESS
     data = json.loads(fake_token_store.read_text())
@@ -328,9 +318,7 @@ def test_logout_no_store_json_omits_transparency(
     missing = tmp_path / "absent.json"
     monkeypatch.setenv(ENV_TOKEN_STORE, str(missing))
 
-    rc = mural_module.main(
-        ["auth", "logout", "--keep-credentials", "--json"]
-    )
+    rc = mural_module.main(["auth", "logout", "--keep-credentials", "--json"])
 
     assert rc == mural_module.EXIT_SUCCESS
     captured = capsys.readouterr()
@@ -352,18 +340,14 @@ def test_logout_all_oserror_omits_transparency(
     fake_token_store: pathlib.Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    fake_token_store.write_text(
-        json.dumps({"schema_version": 2, "profiles": {}})
-    )
+    fake_token_store.write_text(json.dumps({"schema_version": 2, "profiles": {}}))
 
     def _boom(path: pathlib.Path, data: dict[str, Any]) -> None:
         raise OSError("permission denied")
 
     monkeypatch.setattr(mural_module, "_save_token_store_locked", _boom)
 
-    rc = mural_module.main(
-        ["auth", "logout", "--all", "--keep-credentials"]
-    )
+    rc = mural_module.main(["auth", "logout", "--all", "--keep-credentials"])
 
     assert rc == mural_module.EXIT_FAILURE
     err = capsys.readouterr().err

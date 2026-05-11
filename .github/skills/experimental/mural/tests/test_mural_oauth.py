@@ -118,9 +118,7 @@ def test_exchange_authorization_code_happy_path(
     assert body_params["client_id"] == TEST_CLIENT_ID
     assert body_params["client_secret"] == TEST_CLIENT_SECRET
     assert body_params["redirect_uri"] == TEST_REDIRECT_URI
-    content_type = call.headers.get("Content-Type") or call.headers.get(
-        "Content-type"
-    )
+    content_type = call.headers.get("Content-Type") or call.headers.get("Content-type")
     assert content_type == "application/x-www-form-urlencoded"
 
 
@@ -555,6 +553,7 @@ def test_run_login_happy_path_persists_record(
     target = fake_token_store
     mural_module._save_token_store(target, record)
     import os
+
     assert oct(os.stat(target).st_mode & 0o777) == "0o600"
 
 
@@ -574,9 +573,7 @@ def test_loopback_handler_success_returns_200(mural_module: Any) -> None:
 
     handler = mural_module._LoopbackHandler.__new__(mural_module._LoopbackHandler)
     handler.server = _ServerStub()  # type: ignore[attr-defined]
-    handler.path = (
-        f"/callback?code={TEST_AUTH_CODE}&state={TEST_STATE}"
-    )
+    handler.path = f"/callback?code={TEST_AUTH_CODE}&state={TEST_STATE}"
     handler.headers = {"Host": "127.0.0.1:53682"}  # type: ignore[attr-defined]
     handler.wfile = io.BytesIO()
     handler.rfile = io.BytesIO()
@@ -780,11 +777,8 @@ def test_run_login_emits_authorize_url_to_stderr_before_browser(
             timeout_seconds=1,
             open_browser=_broken_browser,
             server_factory=factory,
-            _http=lambda *_a, **_k: pytest.fail(
-                "token endpoint must not be called"
-            ),
+            _http=lambda *_a, **_k: pytest.fail("token endpoint must not be called"),
         )
     err = capsys.readouterr().err
     assert "open this URL to authorize:" in err
     assert "response_type=code" in err
-

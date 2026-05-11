@@ -587,9 +587,7 @@ class TestMigrateConcurrentState:
         cred_path = mural_module._resolve_credential_file("default", os.environ)
         _seed_both_backends(mural_module, cred_path, keyring_alt_backend)
         caplog.set_level(logging.WARNING, logger="mural")
-        rc = mural_module._cmd_auth_migrate(
-            self._make_args(to="keyring", force=True)
-        )
+        rc = mural_module._cmd_auth_migrate(self._make_args(to="keyring", force=True))
         assert rc == mural_module.EXIT_SUCCESS
         warns = [
             r

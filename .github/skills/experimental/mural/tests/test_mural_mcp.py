@@ -301,10 +301,7 @@ def test_oversized_frame_returns_invalid_request_then_recovers(
     assert first.get("error", {}).get("code") == -32600
     second = next((r for r in responses if r.get("id") == 1), None)
     assert second is not None
-    assert (
-        second["result"]["protocolVersion"]
-        == mural_module._MCP_PROTOCOL_PREFERRED
-    )
+    assert second["result"]["protocolVersion"] == mural_module._MCP_PROTOCOL_PREFERRED
 
 
 def test_widget_create_image_requires_alt_text(mural_module: Any) -> None:
@@ -417,7 +414,6 @@ def test_destructive_tool_elicitation_decline_returns_error(
     assert parsed["error"] == "elicitation_declined"
 
 
-
 # ---------------------------------------------------------------------------
 # Phase 2: bulk widgets, mural duplicate/clone-with-tags, templates, poll,
 # archive/unarchive — registry shape + handler behavior
@@ -494,9 +490,7 @@ def test_tool_mural_duplicate_returns_new_id(
         lambda *a, **kw: {"id": "workspace1.mural-new"},
     )
 
-    result = mural_module._tool_mural_duplicate(
-        {"mural": "workspace1.mural-abc123"}
-    )
+    result = mural_module._tool_mural_duplicate({"mural": "workspace1.mural-abc123"})
     assert result == {
         "new_mural_id": "workspace1.mural-new",
         "source_mural_id": "workspace1.mural-abc123",
@@ -508,9 +502,7 @@ def test_tool_clone_with_tags_replays_manifest(
 ) -> None:
     new_id = "workspace1.mural-clone1"
 
-    monkeypatch.setattr(
-        mural_module, "_duplicate_mural", lambda _src: new_id
-    )
+    monkeypatch.setattr(mural_module, "_duplicate_mural", lambda _src: new_id)
     monkeypatch.setattr(
         mural_module,
         "_read_tag_manifest",
@@ -525,9 +517,7 @@ def test_tool_clone_with_tags_replays_manifest(
 
     monkeypatch.setattr(mural_module, "_ensure_tag_manifest", fake_ensure)
 
-    result = mural_module._tool_clone_with_tags(
-        {"mural": "workspace1.mural-abc123"}
-    )
+    result = mural_module._tool_clone_with_tags({"mural": "workspace1.mural-abc123"})
 
     assert captured_manifest["mural_id"] == new_id
     assert result["new_mural_id"] == new_id
@@ -600,9 +590,7 @@ def test_tool_template_create_posts_body(
 
 def test_tool_mural_poll_requires_condition(mural_module: Any) -> None:
     with pytest.raises(mural_module.MCPInvalidParamsError):
-        mural_module._tool_mural_poll(
-            {"mural": "workspace1.mural-abc123"}
-        )
+        mural_module._tool_mural_poll({"mural": "workspace1.mural-abc123"})
 
 
 def test_tool_mural_poll_uses_defaults(

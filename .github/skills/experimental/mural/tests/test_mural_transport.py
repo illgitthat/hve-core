@@ -110,8 +110,10 @@ def test_authenticated_request_proactive_refresh_within_leeway(
     assert result == {"ok": True}
     refresh_call, api_call = recorded_http.calls
     assert refresh_call.method == "POST"
-    assert mural_module.MURAL_TOKEN_URL.endswith(refresh_call.url.split("/")[-1]) or \
-        refresh_call.url == mural_module.MURAL_TOKEN_URL
+    assert (
+        mural_module.MURAL_TOKEN_URL.endswith(refresh_call.url.split("/")[-1])
+        or refresh_call.url == mural_module.MURAL_TOKEN_URL
+    )
     assert api_call.headers["Authorization"] == "Bearer new-access"
     persisted = json.loads(fake_token_store.read_text(encoding="utf-8"))
     profile = persisted["profiles"]["default"]
@@ -319,9 +321,7 @@ def test_authenticated_request_204_returns_none(
 
 
 def test_token_bucket_acquire_blocks_when_empty(mural_module: Any) -> None:
-    bucket = mural_module._TokenBucket(
-        capacity=2.0, tokens_per_sec=10.0, tokens=0.0
-    )
+    bucket = mural_module._TokenBucket(capacity=2.0, tokens_per_sec=10.0, tokens=0.0)
     times = [0.0, 0.0, 1.0]
 
     def now() -> float:
@@ -741,9 +741,7 @@ def test_concurrent_401_responses_trigger_single_refresh(
         except BaseException as exc:  # noqa: BLE001 - propagated via assertion
             errors[index] = exc
 
-    threads = [
-        threading.Thread(target=_worker, args=(i,)) for i in range(n_threads)
-    ]
+    threads = [threading.Thread(target=_worker, args=(i,)) for i in range(n_threads)]
     for thread in threads:
         thread.start()
     for thread in threads:
@@ -811,9 +809,7 @@ def test_concurrent_proactive_refreshes_coalesce(
         except BaseException as exc:  # noqa: BLE001 - propagated via assertion
             errors[index] = exc
 
-    threads = [
-        threading.Thread(target=_worker, args=(i,)) for i in range(n_threads)
-    ]
+    threads = [threading.Thread(target=_worker, args=(i,)) for i in range(n_threads)]
     for thread in threads:
         thread.start()
     for thread in threads:

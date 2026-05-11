@@ -181,13 +181,9 @@ def test_merge_tags_routes_through_typed_path_when_get_emits_space_form(
             "tags": [],
         }
     }
-    calls = _wire_typed_merge_tags(
-        monkeypatch, mural_module, get_response=get_response
-    )
+    calls = _wire_typed_merge_tags(monkeypatch, mural_module, get_response=get_response)
 
-    result = mural_module._merge_tags(
-        "mural-1", "w-1", additions=["tag-a"]
-    )
+    result = mural_module._merge_tags("mural-1", "w-1", additions=["tag-a"])
 
     assert result["ok"] is True
     patch_calls = [path for method, path in calls if method == "PATCH"]
@@ -211,9 +207,7 @@ def test_merge_tags_routes_through_typed_path_when_get_emits_hyphen_form(
             "tags": [],
         }
     }
-    calls = _wire_typed_merge_tags(
-        monkeypatch, mural_module, get_response=get_response
-    )
+    calls = _wire_typed_merge_tags(monkeypatch, mural_module, get_response=get_response)
 
     mural_module._merge_tags("mural-1", "w-1", additions=["tag-a"])
 
@@ -230,9 +224,7 @@ def test_merge_tags_uses_top_level_type_when_value_envelope_absent(
         "type": "shape",
         "tags": [],
     }
-    calls = _wire_typed_merge_tags(
-        monkeypatch, mural_module, get_response=get_response
-    )
+    calls = _wire_typed_merge_tags(monkeypatch, mural_module, get_response=get_response)
 
     mural_module._merge_tags("mural-1", "w-1", additions=["tag-a"])
 
@@ -266,9 +258,7 @@ def test_merge_tags_routes_typed_path_for_every_supported_type(
             "tags": [],
         }
     }
-    calls = _wire_typed_merge_tags(
-        monkeypatch, mural_module, get_response=get_response
-    )
+    calls = _wire_typed_merge_tags(monkeypatch, mural_module, get_response=get_response)
 
     mural_module._merge_tags("mural-1", "w-1", additions=["tag-a"])
 
@@ -311,9 +301,7 @@ def test_patch_widget_falls_back_to_get_when_typed_returns_404(
         state["calls"] += 1
         if state["calls"] == 1:
             # First PATCH against the supplied (incorrect) typed path: 404
-            raise mural_module.MuralAPIError(
-                404, "PATH_NOT_FOUND", "wrong type"
-            )
+            raise mural_module.MuralAPIError(404, "PATH_NOT_FOUND", "wrong type")
         if method == "GET":
             return {"value": {"id": "w-1", "type": "shape"}}
         return {"id": "w-1"}

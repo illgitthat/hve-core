@@ -260,9 +260,7 @@ def test_auth_login_short_circuits_when_credentials_present_without_force(
         def get(self, service: str, key: str) -> str | None:
             return "seeded" if key == mural_module.ENV_CLIENT_ID else None
 
-    monkeypatch.setattr(
-        mural_module, "resolve_backend", lambda profile: _StubBackend()
-    )
+    monkeypatch.setattr(mural_module, "resolve_backend", lambda profile: _StubBackend())
 
     def _boom(**_kwargs: Any) -> dict[str, Any]:
         raise AssertionError("_run_login must not be invoked")
@@ -288,9 +286,7 @@ def test_auth_login_proceeds_with_force_when_credentials_present(
         def get(self, service: str, key: str) -> str | None:
             return "seeded" if key == mural_module.ENV_CLIENT_ID else None
 
-    monkeypatch.setattr(
-        mural_module, "resolve_backend", lambda profile: _StubBackend()
-    )
+    monkeypatch.setattr(mural_module, "resolve_backend", lambda profile: _StubBackend())
     invoked: dict[str, Any] = {}
 
     def _fake_login(*, scopes: str | None, timeout_seconds: int) -> dict[str, Any]:
@@ -301,9 +297,7 @@ def test_auth_login_proceeds_with_force_when_credentials_present(
         }
 
     monkeypatch.setattr(mural_module, "_run_login", _fake_login)
-    monkeypatch.setattr(
-        mural_module, "_load_token_store_locked", lambda path: None
-    )
+    monkeypatch.setattr(mural_module, "_load_token_store_locked", lambda path: None)
     monkeypatch.setattr(
         mural_module, "_save_token_store_locked", lambda path, data: None
     )
@@ -367,9 +361,7 @@ def test_auth_logout_oserror_returns_failure(
     # v1 -> v2 migration save path before reaching the logout handler's
     # try/except (mocked _save_token_store_locked must fire only inside the
     # handler, not during load-time migration).
-    fake_token_store.write_text(
-        json.dumps({"schema_version": 2, "profiles": {}})
-    )
+    fake_token_store.write_text(json.dumps({"schema_version": 2, "profiles": {}}))
 
     def _boom(path: pathlib.Path, data: dict[str, Any]) -> None:
         raise OSError("permission denied")
@@ -676,9 +668,7 @@ def test_resolve_active_profile_precedence(mural_module: Any) -> None:
         == "envvar"
     )
     # Envelope wins when env is unset.
-    assert (
-        mural_module._resolve_active_profile(store_with_active, {}, None) == "env"
-    )
+    assert mural_module._resolve_active_profile(store_with_active, {}, None) == "env"
     # Falls back to DEFAULT_PROFILE_NAME when nothing else is set.
     assert (
         mural_module._resolve_active_profile(store_without_active, {}, None)
@@ -1186,9 +1176,7 @@ def test_auth_logout_all_json_envelope(
         active="alpha",
     )
 
-    rc = mural_module.main(
-        ["auth", "logout", "--all", "--keep-credentials", "--json"]
-    )
+    rc = mural_module.main(["auth", "logout", "--all", "--keep-credentials", "--json"])
 
     assert rc == mural_module.EXIT_SUCCESS
     payload = json.loads(capsys.readouterr().out)
@@ -1306,9 +1294,7 @@ def test_workspace_list_uses_paginate(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    calls = _patch_paginate(
-        monkeypatch, mural_module, [{"id": "w1"}, {"id": "w2"}]
-    )
+    calls = _patch_paginate(monkeypatch, mural_module, [{"id": "w1"}, {"id": "w2"}])
 
     rc = mural_module.main(["workspace", "list", "--limit", "10"])
 
@@ -1338,9 +1324,7 @@ def test_workspace_get_resolves_from_env(
     rc = mural_module.main(["workspace", "get"])
 
     assert rc == mural_module.EXIT_SUCCESS
-    assert calls == [
-        {"method": "GET", "path": f"/workspaces/{TEST_WORKSPACE_ID}"}
-    ]
+    assert calls == [{"method": "GET", "path": f"/workspaces/{TEST_WORKSPACE_ID}"}]
     assert json.loads(capsys.readouterr().out) == {"id": TEST_WORKSPACE_ID}
 
 
@@ -1605,9 +1589,7 @@ def _patch_request_sequenced(
 def test_area_list_uses_dedicated_endpoint_when_available(
     mural_module: Any, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    calls = _patch_paginate(
-        monkeypatch, mural_module, [{"id": "a1", "type": "area"}]
-    )
+    calls = _patch_paginate(monkeypatch, mural_module, [{"id": "a1", "type": "area"}])
 
     rc = mural_module.main(["area", "list", "--mural", TEST_MURAL_ID])
 
@@ -1666,14 +1648,10 @@ def test_area_get_uses_dedicated_endpoint_when_available(
         monkeypatch, mural_module, return_value={"id": "a1", "type": "area"}
     )
 
-    rc = mural_module.main(
-        ["area", "get", "--mural", TEST_MURAL_ID, "--area", "a1"]
-    )
+    rc = mural_module.main(["area", "get", "--mural", TEST_MURAL_ID, "--area", "a1"])
 
     assert rc == mural_module.EXIT_SUCCESS
-    assert calls == [
-        {"method": "GET", "path": f"/murals/{TEST_MURAL_ID}/areas/a1"}
-    ]
+    assert calls == [{"method": "GET", "path": f"/murals/{TEST_MURAL_ID}/areas/a1"}]
 
 
 def test_area_get_falls_back_to_widget_on_404(
@@ -1689,9 +1667,7 @@ def test_area_get_falls_back_to_widget_on_404(
         ],
     )
 
-    rc = mural_module.main(
-        ["area", "get", "--mural", TEST_MURAL_ID, "--area", "a1"]
-    )
+    rc = mural_module.main(["area", "get", "--mural", TEST_MURAL_ID, "--area", "a1"])
 
     assert rc == mural_module.EXIT_SUCCESS
     assert len(calls) == 2
@@ -1711,9 +1687,7 @@ def test_area_get_rejects_widget_with_wrong_type(
         ],
     )
 
-    rc = mural_module.main(
-        ["area", "get", "--mural", TEST_MURAL_ID, "--area", "a1"]
-    )
+    rc = mural_module.main(["area", "get", "--mural", TEST_MURAL_ID, "--area", "a1"])
 
     assert rc != mural_module.EXIT_SUCCESS
 
@@ -1731,9 +1705,7 @@ def test_area_get_populates_cache_on_fallback_path(
         ],
     )
 
-    rc = mural_module.main(
-        ["area", "get", "--mural", TEST_MURAL_ID, "--area", "a1"]
-    )
+    rc = mural_module.main(["area", "get", "--mural", TEST_MURAL_ID, "--area", "a1"])
 
     assert rc == mural_module.EXIT_SUCCESS
     assert mural_module._area_cache["a1"] == fallback_record
@@ -1758,9 +1730,7 @@ def test_widget_list_rejects_oversized_page_size(
     assert rc == mural_module.EXIT_FAILURE
 
 
-def test_widget_get(
-    mural_module: Any, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_widget_get(mural_module: Any, monkeypatch: pytest.MonkeyPatch) -> None:
     calls = _patch_request(
         monkeypatch, mural_module, return_value={"id": TEST_WIDGET_ID}
     )
@@ -2179,13 +2149,9 @@ def test_mural_duplicate_happy_path(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     new_id = "workspace1.mural-new999"
-    calls = _patch_request(
-        monkeypatch, mural_module, return_value={"id": new_id}
-    )
+    calls = _patch_request(monkeypatch, mural_module, return_value={"id": new_id})
 
-    rc = mural_module.main(
-        ["mural", "duplicate", "--mural", TEST_MURAL_ID]
-    )
+    rc = mural_module.main(["mural", "duplicate", "--mural", TEST_MURAL_ID])
 
     assert rc == mural_module.EXIT_SUCCESS
     assert calls[0]["method"] == "POST"
@@ -2199,9 +2165,7 @@ def test_mural_duplicate_missing_id_returns_failure(
 ) -> None:
     _patch_request(monkeypatch, mural_module, return_value={})
 
-    rc = mural_module.main(
-        ["mural", "duplicate", "--mural", TEST_MURAL_ID]
-    )
+    rc = mural_module.main(["mural", "duplicate", "--mural", TEST_MURAL_ID])
     assert rc == mural_module.EXIT_FAILURE
 
 
@@ -2230,9 +2194,7 @@ def test_mural_clone_with_tags_replays_manifest(
     monkeypatch.setattr(mural_module, "_duplicate_mural", _fake_duplicate)
     monkeypatch.setattr(mural_module, "_ensure_tag_manifest", _fake_ensure)
 
-    rc = mural_module.main(
-        ["mural", "clone-with-tags", "--mural", TEST_MURAL_ID]
-    )
+    rc = mural_module.main(["mural", "clone-with-tags", "--mural", TEST_MURAL_ID])
 
     assert rc == mural_module.EXIT_SUCCESS
     assert ensure_calls == [
@@ -2249,9 +2211,7 @@ def test_mural_clone_with_tags_replays_manifest(
     assert out["new_mural_id"] == new_id
     assert out["tag_count"] == 2
     assert out["tag_map"] == {"red": "tag-0", "blue": "tag-1"}
-    assert out["warnings"] == [
-        "widget ids are not preserved across mural duplication"
-    ]
+    assert out["warnings"] == ["widget ids are not preserved across mural duplication"]
 
 
 def test_mural_archive_patches_status(
@@ -2261,9 +2221,7 @@ def test_mural_archive_patches_status(
         monkeypatch, mural_module, return_value={"id": TEST_MURAL_ID}
     )
 
-    rc = mural_module.main(
-        ["mural", "archive", "--mural", TEST_MURAL_ID]
-    )
+    rc = mural_module.main(["mural", "archive", "--mural", TEST_MURAL_ID])
 
     assert rc == mural_module.EXIT_SUCCESS
     assert calls[0] == {
@@ -2280,9 +2238,7 @@ def test_mural_unarchive_patches_status(
         monkeypatch, mural_module, return_value={"id": TEST_MURAL_ID}
     )
 
-    rc = mural_module.main(
-        ["mural", "unarchive", "--mural", TEST_MURAL_ID]
-    )
+    rc = mural_module.main(["mural", "unarchive", "--mural", TEST_MURAL_ID])
 
     assert rc == mural_module.EXIT_SUCCESS
     assert calls[0] == {
@@ -2336,9 +2292,7 @@ def test_template_instantiate_posts_body(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setenv(ENV_DEFAULT_WORKSPACE, TEST_WORKSPACE_ID)
-    calls = _patch_request(
-        monkeypatch, mural_module, return_value={"id": "new-mural"}
-    )
+    calls = _patch_request(monkeypatch, mural_module, return_value={"id": "new-mural"})
 
     rc = mural_module.main(
         [
@@ -2367,9 +2321,7 @@ def test_template_instantiate_requires_template(
     monkeypatch.setenv(ENV_DEFAULT_WORKSPACE, TEST_WORKSPACE_ID)
     _patch_request(monkeypatch, mural_module, return_value={})
 
-    rc = mural_module.main(
-        ["template", "instantiate", "--template", ""]
-    )
+    rc = mural_module.main(["template", "instantiate", "--template", ""])
     assert rc == mural_module.EXIT_FAILURE
 
 
@@ -2378,9 +2330,7 @@ def test_template_create_posts_body(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv(ENV_DEFAULT_WORKSPACE, TEST_WORKSPACE_ID)
-    calls = _patch_request(
-        monkeypatch, mural_module, return_value={"id": "tpl-new"}
-    )
+    calls = _patch_request(monkeypatch, mural_module, return_value={"id": "tpl-new"})
 
     rc = mural_module.main(
         [

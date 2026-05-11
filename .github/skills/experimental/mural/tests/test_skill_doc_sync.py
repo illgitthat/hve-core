@@ -19,9 +19,7 @@ SKILL_PATH = Path(__file__).resolve().parents[1] / "SKILL.md"
 COMMAND_ROW = re.compile(r"`(mural(?: [\w-]+)+)`")
 
 
-def _walk(
-    parser: argparse.ArgumentParser, prefix: str
-) -> list[tuple[str, str]]:
+def _walk(parser: argparse.ArgumentParser, prefix: str) -> list[tuple[str, str]]:
     rows: list[tuple[str, str]] = []
     for action in parser._actions:
         if not isinstance(action, argparse._SubParsersAction):
@@ -49,10 +47,7 @@ def test_skill_md_anchor_covers_every_parser_command(mural_module: Any) -> None:
     rows = _walk(mural_module._build_parser(), "mural")
     body = _anchor_body()
     missing = [command for command, _ in rows if f"`{command}`" not in body]
-    assert not missing, (
-        "SKILL.md anchor block is missing parser commands: "
-        f"{missing}"
-    )
+    assert not missing, f"SKILL.md anchor block is missing parser commands: {missing}"
 
 
 def test_skill_md_anchor_has_no_unknown_commands(mural_module: Any) -> None:

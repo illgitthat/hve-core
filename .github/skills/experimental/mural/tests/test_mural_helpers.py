@@ -107,9 +107,7 @@ def test_save_token_store_writes_mode_0600(
     assert not (tmp_path / "subdir" / "store.json.tmp").exists()
 
 
-def test_save_token_store_round_trip(
-    mural_module: Any, tmp_path: pathlib.Path
-) -> None:
+def test_save_token_store_round_trip(mural_module: Any, tmp_path: pathlib.Path) -> None:
     path = tmp_path / "store.json"
     envelope = {
         "schema_version": 2,
@@ -164,17 +162,13 @@ def test_validate_profile_name_accepts_valid(mural_module: Any) -> None:
     "name",
     ["", ".", ".x", "a/b", "a b", "x" * 33, "-leading-dash"],
 )
-def test_validate_profile_name_rejects_invalid(
-    mural_module: Any, name: str
-) -> None:
+def test_validate_profile_name_rejects_invalid(mural_module: Any, name: str) -> None:
     with pytest.raises(mural_module.MuralValidationError):
         mural_module._validate_profile_name(name)
 
 
 @pytest.mark.parametrize("bad", [123, None, [], ()])
-def test_validate_profile_name_rejects_non_string(
-    mural_module: Any, bad: Any
-) -> None:
+def test_validate_profile_name_rejects_non_string(mural_module: Any, bad: Any) -> None:
     with pytest.raises(mural_module.MuralValidationError):
         mural_module._validate_profile_name(bad)
 
@@ -429,9 +423,7 @@ def test_authenticated_request_rejects_client_id_mismatch(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "key", ["access_token", "refresh_token", "code_verifier"]
-)
+@pytest.mark.parametrize("key", ["access_token", "refresh_token", "code_verifier"])
 def test_redact_json_style_tokens(mural_module: Any, key: str) -> None:
     text = f'before "{key}": "secret-value-12345" after'
     redacted = mural_module._redact(text)
@@ -505,13 +497,9 @@ def _msg(headers: dict[str, str]) -> Message:
 
 
 def test_extract_error_payload_full(mural_module: Any) -> None:
-    body = json.dumps(
-        {"code": "BAD_REQUEST", "message": "nope"}
-    ).encode("utf-8")
+    body = json.dumps({"code": "BAD_REQUEST", "message": "nope"}).encode("utf-8")
     headers = _msg({"X-Request-Id": TEST_REQUEST_ID})
-    code, message, request_id = mural_module._extract_error_payload(
-        body, headers
-    )
+    code, message, request_id = mural_module._extract_error_payload(body, headers)
     assert code == "BAD_REQUEST"
     assert message == "nope"
     assert request_id == TEST_REQUEST_ID
@@ -519,9 +507,7 @@ def test_extract_error_payload_full(mural_module: Any) -> None:
 
 def test_extract_error_payload_request_id_lowercase(mural_module: Any) -> None:
     headers = _msg({"x-request-id": TEST_REQUEST_ID})
-    code, message, request_id = mural_module._extract_error_payload(
-        b"", headers
-    )
+    code, message, request_id = mural_module._extract_error_payload(b"", headers)
     assert code is None
     assert message is None
     assert request_id == TEST_REQUEST_ID
@@ -577,9 +563,7 @@ def test_backoff_seconds_invalid_retry_after_falls_back(
 
 
 def test_parse_rate_limit_headers_returns_values(mural_module: Any) -> None:
-    headers = _msg(
-        {"X-RateLimit-Remaining": "12", "X-RateLimit-Reset": "30"}
-    )
+    headers = _msg({"X-RateLimit-Remaining": "12", "X-RateLimit-Reset": "30"})
     bucket = mural_module._TokenBucket()
     result = mural_module._parse_rate_limit_headers(headers, bucket=bucket)
     assert result == {"remaining": 12, "reset": 30}
@@ -589,9 +573,7 @@ def test_parse_rate_limit_headers_returns_values(mural_module: Any) -> None:
 def test_parse_rate_limit_headers_drains_bucket_when_remaining_zero(
     mural_module: Any,
 ) -> None:
-    headers = _msg(
-        {"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": "10"}
-    )
+    headers = _msg({"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": "10"})
     bucket = mural_module._TokenBucket()
     bucket.tokens = 5.0
     result = mural_module._parse_rate_limit_headers(
@@ -609,9 +591,7 @@ def test_parse_rate_limit_headers_missing_headers(mural_module: Any) -> None:
 
 
 def test_parse_rate_limit_headers_lowercase_lookup(mural_module: Any) -> None:
-    headers = _msg(
-        {"x-ratelimit-remaining": "5", "x-ratelimit-reset": "1"}
-    )
+    headers = _msg({"x-ratelimit-remaining": "5", "x-ratelimit-reset": "1"})
     result = mural_module._parse_rate_limit_headers(headers)
     assert result == {"remaining": 5, "reset": 1}
 
@@ -641,9 +621,7 @@ def test_validate_mural_id_accepts_canonical(mural_module: Any) -> None:
         "ws..mural",
     ],
 )
-def test_validate_mural_id_rejects_bad_inputs(
-    mural_module: Any, value: str
-) -> None:
+def test_validate_mural_id_rejects_bad_inputs(mural_module: Any, value: str) -> None:
     with pytest.raises(mural_module.MuralValidationError):
         mural_module._validate_mural_id(value)
 
@@ -676,9 +654,7 @@ def test_validate_asset_url_accepts_azure_blob(mural_module: Any) -> None:
         "https:///c/x",  # no host
     ],
 )
-def test_validate_asset_url_rejects_bad_inputs(
-    mural_module: Any, url: str
-) -> None:
+def test_validate_asset_url_rejects_bad_inputs(mural_module: Any, url: str) -> None:
     with pytest.raises(mural_module.MuralSecurityError):
         mural_module._validate_asset_url(url)
 
@@ -701,9 +677,7 @@ def test_parse_pagination_cursor_round_trip(mural_module: Any) -> None:
     "value",
     ["", "!!!not-base64!!!", _b64url(b"not json"), _b64url(b'"a string"')],
 )
-def test_parse_pagination_cursor_rejects_bad(
-    mural_module: Any, value: str
-) -> None:
+def test_parse_pagination_cursor_rejects_bad(mural_module: Any, value: str) -> None:
     with pytest.raises(mural_module.MuralValidationError):
         mural_module._parse_pagination_cursor(value)
 
@@ -724,15 +698,21 @@ def _ns(**kwargs: Any) -> argparse.Namespace:
 
 
 def test_build_sticky_note_body_default_shape(mural_module: Any) -> None:
-    args = _ns(text="hello", x=10, y=20, shape=None, width=None, height=None,
-               style=None)
+    args = _ns(
+        text="hello", x=10, y=20, shape=None, width=None, height=None, style=None
+    )
     body = mural_module._build_sticky_note_body(args)
     assert body == {"text": "hello", "x": 10.0, "y": 20.0, "shape": "rectangle"}
 
 
 def test_build_sticky_note_body_with_style_and_dims(mural_module: Any) -> None:
     args = _ns(
-        text="t", x="1", y="2", shape="circle", width=5, height=6,
+        text="t",
+        x="1",
+        y="2",
+        shape="circle",
+        width=5,
+        height=6,
         style='{"fill": "red"}',
     )
     body = mural_module._build_sticky_note_body(args)
@@ -743,22 +723,21 @@ def test_build_sticky_note_body_with_style_and_dims(mural_module: Any) -> None:
 
 
 def test_build_sticky_note_body_requires_text(mural_module: Any) -> None:
-    args = _ns(text=None, x=0, y=0, shape=None, width=None, height=None,
-               style=None)
+    args = _ns(text=None, x=0, y=0, shape=None, width=None, height=None, style=None)
     with pytest.raises(mural_module.MuralValidationError):
         mural_module._build_sticky_note_body(args)
 
 
 def test_build_sticky_note_body_invalid_xy(mural_module: Any) -> None:
-    args = _ns(text="t", x="abc", y=0, shape=None, width=None, height=None,
-               style=None)
+    args = _ns(text="t", x="abc", y=0, shape=None, width=None, height=None, style=None)
     with pytest.raises(mural_module.MuralValidationError):
         mural_module._build_sticky_note_body(args)
 
 
 def test_build_sticky_note_body_invalid_style_json(mural_module: Any) -> None:
-    args = _ns(text="t", x=0, y=0, shape=None, width=None, height=None,
-               style="{not-json}")
+    args = _ns(
+        text="t", x=0, y=0, shape=None, width=None, height=None, style="{not-json}"
+    )
     with pytest.raises(mural_module.MuralValidationError):
         mural_module._build_sticky_note_body(args)
 
@@ -766,7 +745,9 @@ def test_build_sticky_note_body_invalid_style_json(mural_module: Any) -> None:
 def test_build_textbox_body_happy(mural_module: Any) -> None:
     args = _ns(text="hi", x=1, y=2, width=None, height=None, style=None)
     assert mural_module._build_textbox_body(args) == {
-        "text": "hi", "x": 1.0, "y": 2.0,
+        "text": "hi",
+        "x": 1.0,
+        "y": 2.0,
     }
 
 
@@ -777,16 +758,19 @@ def test_build_textbox_body_requires_text(mural_module: Any) -> None:
 
 
 def test_build_shape_body_happy(mural_module: Any) -> None:
-    args = _ns(shape="circle", x=0, y=0, width=10, height=10, text=None,
-               style=None)
+    args = _ns(shape="circle", x=0, y=0, width=10, height=10, text=None, style=None)
     body = mural_module._build_shape_body(args)
-    assert body == {"shape": "circle", "x": 0.0, "y": 0.0,
-                    "width": 10.0, "height": 10.0}
+    assert body == {
+        "shape": "circle",
+        "x": 0.0,
+        "y": 0.0,
+        "width": 10.0,
+        "height": 10.0,
+    }
 
 
 def test_build_shape_body_requires_shape(mural_module: Any) -> None:
-    args = _ns(shape=None, x=0, y=0, width=None, height=None, text=None,
-               style=None)
+    args = _ns(shape=None, x=0, y=0, width=None, height=None, text=None, style=None)
     with pytest.raises(mural_module.MuralValidationError):
         mural_module._build_shape_body(args)
 
@@ -794,7 +778,10 @@ def test_build_shape_body_requires_shape(mural_module: Any) -> None:
 def test_build_arrow_body_happy(mural_module: Any) -> None:
     args = _ns(x1=0, y1=1, x2=2, y2=3, style=None)
     assert mural_module._build_arrow_body(args) == {
-        "x1": 0.0, "y1": 1.0, "x2": 2.0, "y2": 3.0,
+        "x1": 0.0,
+        "y1": 1.0,
+        "x2": 2.0,
+        "y2": 3.0,
     }
 
 
@@ -807,15 +794,13 @@ def test_build_arrow_body_invalid_coord(mural_module: Any) -> None:
 def test_build_image_body_happy(mural_module: Any) -> None:
     args = _ns(x=10, y=20, width=None, height=None, title="caption")
     body = mural_module._build_image_body(asset_name="asset-1", args=args)
-    assert body == {"name": "asset-1", "x": 10.0, "y": 20.0,
-                    "title": "caption"}
+    assert body == {"name": "asset-1", "x": 10.0, "y": 20.0, "title": "caption"}
 
 
 def test_build_image_body_with_dims_no_title(mural_module: Any) -> None:
     args = _ns(x=0, y=0, width=100, height=200, title=None)
     body = mural_module._build_image_body(asset_name="img", args=args)
-    assert body == {"name": "img", "x": 0.0, "y": 0.0,
-                    "width": 100.0, "height": 200.0}
+    assert body == {"name": "img", "x": 0.0, "y": 0.0, "width": 100.0, "height": 200.0}
 
 
 # ---------------------------------------------------------------------------
@@ -904,9 +889,7 @@ def test_token_bucket_acquire_is_thread_safe_under_contention(
 
     def _worker() -> None:
         for _ in range(PER_THREAD):
-            mural_module._token_bucket_acquire(
-                bucket=bucket, now=_now, sleep=_sleep
-            )
+            mural_module._token_bucket_acquire(bucket=bucket, now=_now, sleep=_sleep)
             with counter_lock:
                 counter["value"] += 1
 
@@ -1051,9 +1034,7 @@ def test_parse_poll_condition_dotted_neq(mural_module: Any) -> None:
     "bad",
     ["", "   ", "noop", "==value", "path==", "path== "],
 )
-def test_parse_poll_condition_rejects_invalid(
-    mural_module: Any, bad: str
-) -> None:
+def test_parse_poll_condition_rejects_invalid(mural_module: Any, bad: str) -> None:
     with pytest.raises(mural_module.MuralValidationError):
         mural_module._parse_poll_condition(bad)
 
@@ -1069,29 +1050,30 @@ def test_resolve_dotted_returns_none_on_non_dict_cursor(
 
 
 def test_evaluate_poll_eq_match(mural_module: Any) -> None:
-    assert mural_module._evaluate_poll(
-        {"status": "active"}, ["status"], "==", "active"
-    ) is True
+    assert (
+        mural_module._evaluate_poll({"status": "active"}, ["status"], "==", "active")
+        is True
+    )
 
 
 def test_evaluate_poll_eq_miss(mural_module: Any) -> None:
-    assert mural_module._evaluate_poll(
-        {"status": "draft"}, ["status"], "==", "active"
-    ) is False
+    assert (
+        mural_module._evaluate_poll({"status": "draft"}, ["status"], "==", "active")
+        is False
+    )
 
 
 def test_evaluate_poll_neq(mural_module: Any) -> None:
-    assert mural_module._evaluate_poll(
-        {"status": "draft"}, ["status"], "!=", "active"
-    ) is True
+    assert (
+        mural_module._evaluate_poll({"status": "draft"}, ["status"], "!=", "active")
+        is True
+    )
 
 
 def test_evaluate_poll_missing_field_coerces_to_empty(
     mural_module: Any,
 ) -> None:
-    assert mural_module._evaluate_poll(
-        {}, ["status"], "==", ""
-    ) is True
+    assert mural_module._evaluate_poll({}, ["status"], "==", "") is True
 
 
 # ---------------------------------------------------------------------------
@@ -1246,7 +1228,6 @@ def test_load_payload_file_raises_on_missing(
         mural_module._load_payload_file(str(tmp_path / "absent.json"))
 
 
-
 # ---------------------------------------------------------------------------
 # Phase 7: _merge_tags RMW + retries
 # ---------------------------------------------------------------------------
@@ -1308,9 +1289,7 @@ def test_merge_tags_noop_when_no_additions_or_removals(mural_module: Any) -> Non
 def test_merge_tags_dedups_and_sorts_target(
     mural_module: Any, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    calls = _patch_merge_tags(
-        monkeypatch, mural_module, initial_tags=["b", "c"]
-    )
+    calls = _patch_merge_tags(monkeypatch, mural_module, initial_tags=["b", "c"])
     result = mural_module._merge_tags(
         "mural-1",
         "w-1",
@@ -1350,9 +1329,7 @@ def test_merge_tags_retries_until_convergence(
     monkeypatch.setattr(mural_module, "_tag_merge_backoff_seconds", lambda: 0.0)
     monkeypatch.setattr(mural_module.time, "sleep", lambda _s: None)
 
-    result = mural_module._merge_tags(
-        "mural-1", "w-1", additions=["x", "y"]
-    )
+    result = mural_module._merge_tags("mural-1", "w-1", additions=["x", "y"])
     assert result["ok"] is True
     assert result["attempts"] == 2
     assert result["tags"] == ["x", "y"]
@@ -1368,9 +1345,7 @@ def test_merge_tags_raises_conflict_after_max_retries(
         observed_after_patch=[],  # never converges
     )
     with pytest.raises(mural_module.MuralTagMergeConflict) as excinfo:
-        mural_module._merge_tags(
-            "mural-1", "w-1", additions=["x"], max_retries=2
-        )
+        mural_module._merge_tags("mural-1", "w-1", additions=["x"], max_retries=2)
     err = excinfo.value
     assert err.attempts == 2
     assert err.intended == ["x"]
@@ -1383,9 +1358,7 @@ def test_merge_tags_records_session_manifest_on_success(
     mural_module: Any, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _patch_merge_tags(monkeypatch, mural_module, initial_tags=[])
-    mural_module._merge_tags(
-        "mural-1", "w-1", additions=["alpha", "beta"]
-    )
+    mural_module._merge_tags("mural-1", "w-1", additions=["alpha", "beta"])
     assert mural_module._SessionManifest[("mural-1", "w-1")] == {"alpha", "beta"}
 
 
@@ -1445,9 +1418,7 @@ def test_parse_lineage_prefix_is_positional(mural_module: Any) -> None:
     # Parser is order-sensitive: only fields appearing in the canonical
     # ``method=N section=S run=R`` order are recognized; out-of-order keys
     # before ``method`` are skipped to None.
-    parsed = mural_module._parse_lineage_prefix(
-        "[dt:section=a run=r method=7]"
-    )
+    parsed = mural_module._parse_lineage_prefix("[dt:section=a run=r method=7]")
     assert parsed is not None
     assert parsed["method"] == 7
     assert parsed["section"] is None
@@ -1531,9 +1502,7 @@ def test_layout_column_stacks_vertically(mural_module: Any) -> None:
 
 def test_layout_row_lays_horizontally(mural_module: Any) -> None:
     widgets = [{"id": "a"}, {"id": "b"}, {"id": "c"}]
-    placed = mural_module._layout_row(
-        widgets, cell_width=10, cell_height=10, gutter=2
-    )
+    placed = mural_module._layout_row(widgets, cell_width=10, cell_height=10, gutter=2)
     assert [w["y"] for w in placed] == [0.0, 0.0, 0.0]
     assert [w["x"] for w in placed] == [0.0, 12.0, 24.0]
 
@@ -1584,7 +1553,10 @@ def test_layout_hash_changes_with_params(mural_module: Any) -> None:
 
 def test_layout_envelope_for_empty_returns_zeros(mural_module: Any) -> None:
     assert mural_module._layout_envelope([]) == {
-        "x": 0.0, "y": 0.0, "width": 0.0, "height": 0.0,
+        "x": 0.0,
+        "y": 0.0,
+        "width": 0.0,
+        "height": 0.0,
     }
 
 
@@ -1599,7 +1571,8 @@ def test_layout_envelope_computes_bounds(mural_module: Any) -> None:
 
 def test_area_capacity_uses_top_level_dimensions(mural_module: Any) -> None:
     assert mural_module._area_capacity({"width": 500, "height": 400}) == {
-        "width": 500.0, "height": 400.0,
+        "width": 500.0,
+        "height": 400.0,
     }
 
 
@@ -2210,9 +2183,7 @@ def test_widgets_in_shape_rotation_aware_expands_container(
         widgets, rotated_frame, rotation_aware=False
     )
     assert inactive == []
-    active = mural_module.widgets_in_shape(
-        widgets, rotated_frame, rotation_aware=True
-    )
+    active = mural_module.widgets_in_shape(widgets, rotated_frame, rotation_aware=True)
     assert [w["id"] for w in active] == ["corner"]
 
 
@@ -2454,9 +2425,10 @@ def test_cluster_widgets_min_samples_one_returns_singletons_for_isolated(
         {"id": "b", "x": 1000.0, "y": 0.0, "width": 10.0, "height": 10.0},
         {"id": "c", "x": 1020.0, "y": 0.0, "width": 10.0, "height": 10.0},
     ]
-    assert mural_module.cluster_widgets(
-        widgets, eps_px=50.0, min_samples=1
-    ) == [["b", "c"], ["a"]]
+    assert mural_module.cluster_widgets(widgets, eps_px=50.0, min_samples=1) == [
+        ["b", "c"],
+        ["a"],
+    ]
 
 
 def test_sort_along_axis_empty_input_returns_empty(mural_module: Any) -> None:
@@ -2604,13 +2576,7 @@ def test_ray_cast_pip_too_few_vertices_returns_false(
 ) -> None:
     assert mural_module.ray_cast_pip((0.0, 0.0), []) is False
     assert mural_module.ray_cast_pip((0.0, 0.0), [(0.0, 0.0)]) is False
-    assert (
-        mural_module.ray_cast_pip(
-            (0.0, 0.0), [(0.0, 0.0), (1.0, 1.0)]
-        )
-        is False
-    )
-
+    assert mural_module.ray_cast_pip((0.0, 0.0), [(0.0, 0.0), (1.0, 1.0)]) is False
 
 
 # ---------------------------------------------------------------------------
@@ -2705,9 +2671,7 @@ def test_arrow_graph_summary_empty_graph(mural_module: Any) -> None:
 
 def test_arrow_graph_summary_single_edge_shape(mural_module: Any) -> None:
     widgets = [_w("a", 0.0, 0.0), _w("b", 100.0, 0.0)]
-    graph = mural_module.build_arrow_graph(
-        widgets, [_a("e1", 5.0, 5.0, 105.0, 5.0)]
-    )
+    graph = mural_module.build_arrow_graph(widgets, [_a("e1", 5.0, 5.0, 105.0, 5.0)])
     summary = mural_module.arrow_graph_summary(graph)
     assert summary["nodes"] == ["a", "b"]
     assert summary["edges"] == [{"id": "e1", "source": "a", "target": "b"}]
@@ -2739,9 +2703,7 @@ def test_arrow_graph_summary_dag(mural_module: Any) -> None:
 
 def test_arrow_graph_summary_round_trips_json(mural_module: Any) -> None:
     widgets = [_w("a", 0.0, 0.0), _w("b", 100.0, 0.0)]
-    graph = mural_module.build_arrow_graph(
-        widgets, [_a("e1", 5.0, 5.0, 105.0, 5.0)]
-    )
+    graph = mural_module.build_arrow_graph(widgets, [_a("e1", 5.0, 5.0, 105.0, 5.0)])
     summary = mural_module.arrow_graph_summary(graph)
     assert json.loads(json.dumps(summary)) == summary
 
@@ -2807,13 +2769,15 @@ def test_strip_html_removes_tags_and_trims(mural_module: Any) -> None:
 
 def test_coalesce_widget_text_prefers_html_then_text(mural_module: Any) -> None:
     # Portal edit: text is empty, htmlText carries body.
-    assert mural_module._coalesce_widget_text(
-        {"text": "", "htmlText": "<p>Hi</p>"}
-    ) == "Hi"
+    assert (
+        mural_module._coalesce_widget_text({"text": "", "htmlText": "<p>Hi</p>"})
+        == "Hi"
+    )
     # API create: text is set, htmlText empty.
-    assert mural_module._coalesce_widget_text(
-        {"text": "raw body", "htmlText": ""}
-    ) == "raw body"
+    assert (
+        mural_module._coalesce_widget_text({"text": "raw body", "htmlText": ""})
+        == "raw body"
+    )
     # Both empty.
     assert mural_module._coalesce_widget_text({"text": "", "htmlText": ""}) == ""
     # Missing keys.
@@ -3025,9 +2989,7 @@ def test_paginate_follows_next_cursor_across_pages(
         return pages[len(calls) - 1]
 
     monkeypatch.setattr(mural_module, "_authenticated_request", fake_request)
-    result = list(
-        mural_module._paginate("GET", "/murals/m/widgets", page_size=2)
-    )
+    result = list(mural_module._paginate("GET", "/murals/m/widgets", page_size=2))
     assert [r["id"] for r in result] == ["a", "b", "c", "d", "e"]
     assert len(calls) == 3
     assert calls[0]["params"] == {"limit": 2}
@@ -3051,9 +3013,7 @@ def test_paginate_max_pages_short_circuits(
         return pages[idx]
 
     monkeypatch.setattr(mural_module, "_authenticated_request", fake_request)
-    result = list(
-        mural_module._paginate("GET", "/murals/m/widgets", max_pages=2)
-    )
+    result = list(mural_module._paginate("GET", "/murals/m/widgets", max_pages=2))
     assert [r["id"] for r in result] == ["a", "b"]
     assert call_count["n"] == 2
 
@@ -3068,9 +3028,7 @@ def test_paginate_max_pages_one_disables_cursor_following(
         return {"value": [{"id": "a"}, {"id": "b"}], "next": "tok1"}
 
     monkeypatch.setattr(mural_module, "_authenticated_request", fake_request)
-    result = list(
-        mural_module._paginate("GET", "/murals/m/widgets", max_pages=1)
-    )
+    result = list(mural_module._paginate("GET", "/murals/m/widgets", max_pages=1))
     assert [r["id"] for r in result] == ["a", "b"]
     assert call_count["n"] == 1
 
@@ -3090,9 +3048,7 @@ def test_paginate_limit_caps_total_records(
         return pages[idx]
 
     monkeypatch.setattr(mural_module, "_authenticated_request", fake_request)
-    result = list(
-        mural_module._paginate("GET", "/murals/m/widgets", limit=2)
-    )
+    result = list(mural_module._paginate("GET", "/murals/m/widgets", limit=2))
     assert [r["id"] for r in result] == ["a", "b"]
     assert call_count["n"] == 1
 
@@ -3229,9 +3185,7 @@ def test_apply_widget_diff_routes_create_update_delete(
     diff = {
         "summary": {"added": 1, "removed": 1, "changed": 1},
         "added": [{"id": "extra-on-live", "type": "sticky-note"}],
-        "removed": [
-            {"id": "missing-on-live", "type": "sticky-note", "text": "new"}
-        ],
+        "removed": [{"id": "missing-on-live", "type": "sticky-note", "text": "new"}],
         "changed": [
             {
                 "id": "keep",
@@ -3274,9 +3228,7 @@ def test_apply_widget_diff_routes_create_update_delete(
 
     result = mural_module._apply_widget_diff("M.id", baseline, diff, atomic=False)
 
-    assert create_calls == [
-        ("M.id", [{"type": "sticky-note", "text": "new"}], False)
-    ]
+    assert create_calls == [("M.id", [{"type": "sticky-note", "text": "new"}], False)]
     assert update_calls == [
         (
             "M.id",
@@ -3291,9 +3243,7 @@ def test_apply_widget_diff_routes_create_update_delete(
         )
     ]
     assert delete_calls == [("DELETE", "/murals/M.id/widgets/extra-on-live")]
-    assert result["create"]["succeeded"] == [
-        {"type": "sticky-note", "text": "new"}
-    ]
+    assert result["create"]["succeeded"] == [{"type": "sticky-note", "text": "new"}]
     assert result["update"]["succeeded"] == [{"widget_id": "keep"}]
     assert result["delete"]["succeeded"] == ["extra-on-live"]
 
@@ -3325,9 +3275,7 @@ def test_apply_widget_diff_warns_when_baseline_cannot_unset(
     result = mural_module._apply_widget_diff("M.id", baseline, diff, atomic=False)
 
     assert result["update"]["succeeded"] == []
-    assert any(
-        "cannot unset fields" in w for w in result["update"]["warnings"]
-    )
+    assert any("cannot unset fields" in w for w in result["update"]["warnings"])
 
 
 def test_apply_widget_diff_propagates_atomic_abort(
@@ -3371,9 +3319,7 @@ def test_bulk_delete_widgets_aborts_under_atomic(
     monkeypatch.setattr(mural_module, "_authenticated_request", fake_request)
 
     with pytest.raises(mural_module.MuralBulkAtomicAbort):
-        mural_module._bulk_delete_widgets(
-            "M.id", ["w1", "w2", "w3"], atomic=True
-        )
+        mural_module._bulk_delete_widgets("M.id", ["w1", "w2", "w3"], atomic=True)
     # w3 must not be attempted under --atomic abort
     assert seen == [
         "/murals/M.id/widgets/w1",
@@ -3409,9 +3355,7 @@ def test_cmd_widget_diff_apply_invokes_apply_helper(
     monkeypatch.setattr(
         mural_module,
         "_paginate",
-        lambda *_a, **_kw: iter(
-            [{"id": "a", "type": "sticky-note", "text": "live"}]
-        ),
+        lambda *_a, **_kw: iter([{"id": "a", "type": "sticky-note", "text": "live"}]),
     )
 
     apply_calls: list[Any] = []

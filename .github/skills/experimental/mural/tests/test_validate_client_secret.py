@@ -33,9 +33,7 @@ def test_rejects_non_string(mural_module: Any, value: Any) -> None:
 
 @pytest.mark.parametrize("value", ["", "   ", "\t\n"])
 def test_rejects_empty_or_whitespace_only(mural_module: Any, value: str) -> None:
-    with pytest.raises(
-        ValueError, match="client secret is empty or whitespace only"
-    ):
+    with pytest.raises(ValueError, match="client secret is empty or whitespace only"):
         mural_module._validate_client_secret(value)
 
 

@@ -239,4 +239,3 @@ def test_main_exit_code_matrix(
     monkeypatch.setattr(mural_module, "_build_parser", FakeParser)
 
     assert mural_module.main([]) == expected
-

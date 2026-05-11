@@ -142,9 +142,7 @@ def _collect_tool_output_shapes(func: ast.FunctionDef) -> list[frozenset[str]]:
     return shapes
 
 
-def _parse_handlers() -> tuple[
-    dict[str, ast.FunctionDef], dict[str, ast.FunctionDef]
-]:
+def _parse_handlers() -> tuple[dict[str, ast.FunctionDef], dict[str, ast.FunctionDef]]:
     """Return ``({cmd_basename: node}, {tool_basename: node})`` from ``mural.py``."""
     tree = ast.parse(MURAL_PY.read_text(encoding="utf-8"), filename=str(MURAL_PY))
     cmds: dict[str, ast.FunctionDef] = {}
@@ -173,8 +171,7 @@ def test_no_unaccounted_cli_handlers(
     unaccounted = sorted(
         cmd
         for cmd in cmds
-        if cmd not in ALLOWED_CLI_ONLY
-        and cmd_to_tool.get(cmd, cmd) not in tools
+        if cmd not in ALLOWED_CLI_ONLY and cmd_to_tool.get(cmd, cmd) not in tools
     )
     assert not unaccounted, (
         "_cmd_* handlers without a paired _tool_* and not in ALLOWED_CLI_ONLY: "

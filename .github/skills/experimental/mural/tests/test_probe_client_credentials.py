@@ -99,9 +99,7 @@ def test_probe_returns_false_on_url_error(
     assert message == "could not reach Mural; rerun with --no-test to skip probing"
 
 
-def test_probe_returns_false_on_timeout(
-    mural_module: Any, recorded_http: Any
-) -> None:
+def test_probe_returns_false_on_timeout(mural_module: Any, recorded_http: Any) -> None:
     recorded_http.responses.append(TimeoutError("read timed out"))
     ok, message = mural_module._probe_client_credentials(
         TEST_CLIENT_ID,
@@ -113,9 +111,7 @@ def test_probe_returns_false_on_timeout(
     assert message == "could not reach Mural; rerun with --no-test to skip probing"
 
 
-def test_probe_returns_false_on_oserror(
-    mural_module: Any, recorded_http: Any
-) -> None:
+def test_probe_returns_false_on_oserror(mural_module: Any, recorded_http: Any) -> None:
     recorded_http.responses.append(OSError("broken pipe"))
     ok, message = mural_module._probe_client_credentials(
         TEST_CLIENT_ID,
@@ -208,17 +204,11 @@ def _interactive_bootstrap(
     tmp_path: Any,
 ) -> Any:
     """Configure environment so `_cmd_auth_bootstrap` reaches Stage 7."""
-    monkeypatch.setattr(
-        mural_module, "_bootstrap_is_interactive", lambda: True
-    )
+    monkeypatch.setattr(mural_module, "_bootstrap_is_interactive", lambda: True)
     # Use file backend (no keyring) and isolate the credential file per test.
     monkeypatch.setenv("MURAL_CREDENTIAL_BACKEND", "file")
-    monkeypatch.setenv(
-        "MURAL_ENV_FILE", str(tmp_path / "mural.default.env")
-    )
-    monkeypatch.setattr(
-        "builtins.input", lambda prompt="": TEST_CLIENT_ID
-    )
+    monkeypatch.setenv("MURAL_ENV_FILE", str(tmp_path / "mural.default.env"))
+    monkeypatch.setattr("builtins.input", lambda prompt="": TEST_CLIENT_ID)
     monkeypatch.setattr(
         mural_module.getpass,
         "getpass",
@@ -235,9 +225,7 @@ def test_bootstrap_no_test_flag_skips_probe(
     _interactive_bootstrap: Any, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     probe = _RecordingProbe((True, "credentials accepted by Mural"))
-    monkeypatch.setattr(
-        _interactive_bootstrap, "_probe_client_credentials", probe
-    )
+    monkeypatch.setattr(_interactive_bootstrap, "_probe_client_credentials", probe)
     args = argparse.Namespace(profile=None, force=False, no_test=True)
     rc = _interactive_bootstrap._cmd_auth_bootstrap(args)
     assert rc == _interactive_bootstrap.EXIT_SUCCESS
@@ -248,9 +236,7 @@ def test_bootstrap_runs_probe_by_default(
     _interactive_bootstrap: Any, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     probe = _RecordingProbe((True, "credentials accepted by Mural"))
-    monkeypatch.setattr(
-        _interactive_bootstrap, "_probe_client_credentials", probe
-    )
+    monkeypatch.setattr(_interactive_bootstrap, "_probe_client_credentials", probe)
     args = argparse.Namespace(profile=None, force=False, no_test=False)
     rc = _interactive_bootstrap._cmd_auth_bootstrap(args)
     assert rc == _interactive_bootstrap.EXIT_SUCCESS
@@ -263,9 +249,7 @@ def test_bootstrap_failed_probe_returns_failure_with_hint(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     probe = _RecordingProbe((False, "credentials rejected by Mural (HTTP 401)"))
-    monkeypatch.setattr(
-        _interactive_bootstrap, "_probe_client_credentials", probe
-    )
+    monkeypatch.setattr(_interactive_bootstrap, "_probe_client_credentials", probe)
     args = argparse.Namespace(profile=None, force=False, no_test=False)
     rc = _interactive_bootstrap._cmd_auth_bootstrap(args)
     assert rc == _interactive_bootstrap.EXIT_FAILURE

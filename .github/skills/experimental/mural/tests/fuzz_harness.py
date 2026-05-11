@@ -265,9 +265,7 @@ def fuzz_loopback_callback_request(data: bytes) -> None:
         with suppress(OSError):
             server_sock.shutdown(socket.SHUT_WR)
         with suppress(Exception):
-            mural._LoopbackHandler(
-                client_sock, ("127.0.0.1", 0), _FuzzServer()
-            )
+            mural._LoopbackHandler(client_sock, ("127.0.0.1", 0), _FuzzServer())
     finally:
         with suppress(OSError):
             server_sock.close()
@@ -665,10 +663,7 @@ class TestMuralFuzzHarness:
             mural._parse_token_response(resp)
 
     def test_validate_hyperlink_accepts_short_string(self) -> None:
-        assert (
-            mural._validate_hyperlink("https://example.com")
-            == "https://example.com"
-        )
+        assert mural._validate_hyperlink("https://example.com") == "https://example.com"
 
     @pytest.mark.parametrize(
         "value",
@@ -776,9 +771,7 @@ class TestMuralFuzzHarness:
         import pathlib as _pathlib
 
         assert (
-            mural._profile_from_credential_path(
-                _pathlib.Path("/tmp/mural.team_x.env")
-            )
+            mural._profile_from_credential_path(_pathlib.Path("/tmp/mural.team_x.env"))
             == "team_x"
         )
 

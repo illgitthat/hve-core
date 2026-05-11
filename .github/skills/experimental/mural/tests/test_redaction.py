@@ -177,10 +177,7 @@ def test_logger_area_chain_warning_wraps_exc_in_redact(
 ) -> None:
     """Area chain walk warning must redact the caught exception text."""
     src = pathlib.Path(mural_module.__file__).read_text(encoding="utf-8")
-    assert (
-        'LOGGER.warning("area chain walk stopped: %s", _redact(str(exc)))'
-        in src
-    )
+    assert 'LOGGER.warning("area chain walk stopped: %s", _redact(str(exc)))' in src
 
 
 def test_logger_no_bare_exception_calls(mural_module: Any) -> None:
@@ -214,9 +211,7 @@ def test_logger_format_string_redacts_token_url_at_runtime(
 ) -> None:
     """Runtime guard: LOGGER format-string interpolation of a `_redact()`-wrapped
     URL must not surface a `code` query value."""
-    secret_url = (
-        f"https://example.com/oauth/token?code={SECRET_VALUE}&state=xyz"
-    )
+    secret_url = f"https://example.com/oauth/token?code={SECRET_VALUE}&state=xyz"
     with caplog.at_level(logging.DEBUG, logger=mural_module.LOGGER.name):
         mural_module.LOGGER.debug("POST %s", mural_module._redact(secret_url))
     assert SECRET_VALUE not in caplog.text
@@ -232,9 +227,7 @@ def test_logger_format_string_redacts_authenticated_url_at_runtime(
         f"?sig={SECRET_VALUE}&sv=2024-01-01"
     )
     with caplog.at_level(logging.DEBUG, logger=mural_module.LOGGER.name):
-        mural_module.LOGGER.debug(
-            "%s %s", "GET", mural_module._redact(sas_url)
-        )
+        mural_module.LOGGER.debug("%s %s", "GET", mural_module._redact(sas_url))
     assert SECRET_VALUE not in caplog.text
 
 

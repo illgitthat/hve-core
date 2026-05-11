@@ -212,6 +212,7 @@ def _compute_expires_at(now: float, expires_in: int | None) -> int:
         return int(now)
     return int(now) + seconds
 
+
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 1
 EXIT_USAGE = 2
@@ -272,11 +273,11 @@ _REDACT_KEYS = (
     "refresh_token",
     "code_verifier",
     "client_secret",
-    "id_token",          # OIDC ID Token (JWT)
-    "assertion",         # RFC 7521 §4.2 — JWT/SAML bearer grant assertion
+    "id_token",  # OIDC ID Token (JWT)
+    "assertion",  # RFC 7521 §4.2 — JWT/SAML bearer grant assertion
     "client_assertion",  # RFC 7521 §4.2 — JWT/SAML client authentication
-    "device_code",       # RFC 8628 device-authorization grant pre-auth secret
-    "password",          # RFC 6749 §4.3 ROPC credential
+    "device_code",  # RFC 8628 device-authorization grant pre-auth secret
+    "password",  # RFC 6749 §4.3 ROPC credential
 )
 _REDACT_PATTERNS = [
     # JSON-style: "key": "value"
@@ -291,8 +292,10 @@ _REDACT_PATTERNS.extend(
     ]
 )
 _REDACT_PATTERNS.append(
-    (re.compile(r"(?i)(authorization\s*[:=]\s*)(bearer\s+)?(\S+)", re.IGNORECASE),
-     r"\1\2***")
+    (
+        re.compile(r"(?i)(authorization\s*[:=]\s*)(bearer\s+)?(\S+)", re.IGNORECASE),
+        r"\1\2***",
+    )
 )
 # Azure Blob SAS query strings (used for image uploads): scrub everything
 # after the storage host's `?` so the `sig=` token is not logged.
@@ -351,9 +354,7 @@ class MuralAmbiguousWorkspaceError(MuralError):
         self.workspace_ids = list(workspace_ids or [])
         if message is None:
             available = (
-                ", ".join(self.workspace_ids)
-                if self.workspace_ids
-                else "unknown"
+                ", ".join(self.workspace_ids) if self.workspace_ids else "unknown"
             )
             message = (
                 "multiple workspaces available; pass --workspace <id> or set "
@@ -653,9 +654,7 @@ class KeyringBackend:
             import keyring
             from keyring import errors as keyring_errors
         except ImportError as exc:
-            raise _KeyringUnavailable(
-                f"keyring package not importable: {exc}"
-            ) from exc
+            raise _KeyringUnavailable(f"keyring package not importable: {exc}") from exc
         override = os.environ.get("MURAL_KEYRING_BACKEND")
         if override:
             try:
@@ -737,11 +736,7 @@ class FileBackend:
                 continue
             key = match.group("k")
             value = match.group("v")
-            if (
-                len(value) >= 2
-                and value[0] == value[-1]
-                and value[0] in ("'", '"')
-            ):
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
                 value = value[1:-1]
             result[key] = value
         return result
@@ -849,7 +844,7 @@ def _profile_from_credential_path(path: pathlib.Path) -> str:
     """
     name = path.name
     if name.startswith("mural.") and name.endswith(".env"):
-        candidate = name[len("mural."): -len(".env")]
+        candidate = name[len("mural.") : -len(".env")]
         if candidate and _PROFILE_NAME_RE.match(candidate):
             return candidate
     return DEFAULT_PROFILE_NAME
@@ -1200,9 +1195,7 @@ def _load_token_store_locked(path: pathlib.Path) -> dict[str, Any] | None:
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as exc:
-        raise MuralError(
-            f"token store at {path} is not valid JSON: {exc}"
-        ) from exc
+        raise MuralError(f"token store at {path} is not valid JSON: {exc}") from exc
     if not isinstance(data, dict):
         raise MuralError(f"token store at {path} is not a JSON object")
     if "schema_version" not in data:
@@ -1216,9 +1209,7 @@ def _load_token_store_locked(path: pathlib.Path) -> dict[str, Any] | None:
         )
     profiles = data.get("profiles")
     if not isinstance(profiles, dict):
-        raise MuralError(
-            f"token store at {path} is missing a 'profiles' object"
-        )
+        raise MuralError(f"token store at {path} is missing a 'profiles' object")
     for name, profile in profiles.items():
         _validate_profile_name(name)
         _validate_profile(profile)
@@ -1253,9 +1244,7 @@ def _save_token_store_locked(path: pathlib.Path, data: dict[str, Any]) -> None:
     """Write ``data`` atomically with mode 0600. Caller already holds the lock."""
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = json.dumps(data, indent=2, sort_keys=True).encode("utf-8")
-    tmp = path.with_name(
-        f"{path.name}.{os.getpid()}.{threading.get_ident()}.tmp"
-    )
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
     prev_umask = os.umask(0o077)
     try:
         # ``O_EXCL`` rejects a stale temp from a crashed peer rather than
@@ -1572,9 +1561,7 @@ def _emit_debug_traceback(exc: BaseException) -> None:
     """
     if not os.environ.get("MURAL_DEBUG"):
         return
-    formatted = "".join(
-        traceback.format_exception(type(exc), exc, exc.__traceback__)
-    )
+    formatted = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
     print(_redact(formatted), file=sys.stderr)
 
 
@@ -1709,9 +1696,7 @@ def _read_capped(stream: Any, limit: int) -> bytes:
     if chunk is None:
         return b""
     if len(chunk) > limit:
-        raise ResponseTooLarge(
-            f"response body exceeds {limit} bytes"
-        )
+        raise ResponseTooLarge(f"response body exceeds {limit} bytes")
     return chunk
 
 
@@ -1774,9 +1759,8 @@ def _authenticated_request(
         )
 
     expires_at = int(profile_data.get("expires_at") or 0)
-    if (
-        expires_at - REFRESH_LEEWAY_SECONDS <= _now()
-        and profile_data.get("refresh_token")
+    if expires_at - REFRESH_LEEWAY_SECONDS <= _now() and profile_data.get(
+        "refresh_token"
     ):
         store = _coalesced_refresh(
             store_path,
@@ -1859,7 +1843,7 @@ def _authenticated_request(
         except urllib.error.URLError as exc:
             if attempt >= MAX_RETRIES:
                 raise MuralError(f"network error contacting {url}: {exc}") from exc
-            wait = min(MAX_BACKOFF_SECONDS, 2 ** attempt)
+            wait = min(MAX_BACKOFF_SECONDS, 2**attempt)
             _emit(
                 f"network error: {exc}; retrying in {wait:.2f}s "
                 f"(attempt {attempt + 1}/{MAX_RETRIES})",
@@ -1942,7 +1926,7 @@ def _backoff_seconds(headers_obj: Any, attempt: int) -> float:
                 except (TypeError, ValueError):
                     retry_after = None
     if retry_after is None:
-        retry_after = float(min(MAX_BACKOFF_SECONDS, 2 ** attempt))
+        retry_after = float(min(MAX_BACKOFF_SECONDS, 2**attempt))
     return min(MAX_BACKOFF_SECONDS, max(0.0, retry_after))
 
 
@@ -2089,9 +2073,7 @@ class _LoopbackServer(http.server.HTTPServer):
         if sys.platform == "win32":
             SO_EXCLUSIVEADDRUSE = 0x4  # noqa: N806
             with contextlib.suppress(OSError, AttributeError):
-                self.socket.setsockopt(
-                    socket.SOL_SOCKET, SO_EXCLUSIVEADDRUSE, 1
-                )
+                self.socket.setsockopt(socket.SOL_SOCKET, SO_EXCLUSIVEADDRUSE, 1)
         super().server_bind()
 
 
@@ -2247,8 +2229,7 @@ def _validate_client_secret(secret: str) -> str:
     # that catches truncated pastes without rejecting future shorter formats.
     if len(trimmed) < 16:
         raise ValueError(
-            f"client secret is too short ({len(trimmed)} chars); "
-            "expected at least 16"
+            f"client secret is too short ({len(trimmed)} chars); expected at least 16"
         )
     return trimmed
 
@@ -2444,9 +2425,7 @@ def _validate_mural_id(value: str) -> str:
     if not isinstance(value, str) or not value:
         raise MuralValidationError("mural id must be a non-empty string")
     if "\x00" in value or "/" in value or "\\" in value or ".." in value:
-        raise MuralValidationError(
-            f"mural id contains forbidden characters: {value!r}"
-        )
+        raise MuralValidationError(f"mural id contains forbidden characters: {value!r}")
     if not _MURAL_ID_RE.match(value):
         raise MuralValidationError(
             f"mural id must match {_MURAL_ID_RE.pattern}, got {value!r}"
@@ -2500,9 +2479,7 @@ def _format_output(data: Any, fields: list[str] | None, fmt: str) -> str:
         rows = projected if isinstance(projected, list) else [projected]
         if not rows:
             return ""
-        keys = fields or sorted(
-            {k for r in rows if isinstance(r, dict) for k in r}
-        )
+        keys = fields or sorted({k for r in rows if isinstance(r, dict) for k in r})
         if not keys:
             return ""
         widths = [
@@ -2516,8 +2493,7 @@ def _format_output(data: Any, fields: list[str] | None, fmt: str) -> str:
         sep = "  ".join("-" * w for w in widths)
         body_lines = [
             "  ".join(
-                str(_extract_field(r, k) or "").ljust(w)
-                for k, w in zip(keys, widths)
+                str(_extract_field(r, k) or "").ljust(w) for k, w in zip(keys, widths)
             )
             for r in rows
         ]
@@ -2627,14 +2603,8 @@ def _resolve_workspace_id(
     fallback = src.get(ENV_DEFAULT_WORKSPACE)
     if fallback:
         return fallback
-    workspaces = list(
-        _paginate("GET", "/workspaces", env=src, **request_kwargs)
-    )
-    ids = [
-        w.get("id")
-        for w in workspaces
-        if isinstance(w, dict) and w.get("id")
-    ]
+    workspaces = list(_paginate("GET", "/workspaces", env=src, **request_kwargs))
+    ids = [w.get("id") for w in workspaces if isinstance(w, dict) and w.get("id")]
     if len(ids) == 1:
         return ids[0]
     raise MuralAmbiguousWorkspaceError(workspace_ids=ids)
@@ -2683,9 +2653,7 @@ def _coerce_xy(value: Any, name: str) -> float:
     try:
         return float(value)
     except (TypeError, ValueError) as exc:
-        raise MuralValidationError(
-            f"{name} must be numeric, got {value!r}"
-        ) from exc
+        raise MuralValidationError(f"{name} must be numeric, got {value!r}") from exc
 
 
 def _validate_hyperlink(value: Any) -> str:
@@ -2849,9 +2817,7 @@ def _create_asset_url(
 ) -> dict[str, Any]:
     """Call ``POST /murals/{id}/assets`` and return the ``value`` payload."""
     if not file_extension:
-        raise MuralValidationError(
-            "file_extension is required to create an asset url"
-        )
+        raise MuralValidationError("file_extension is required to create an asset url")
     ext = file_extension.lstrip(".").lower()
     response = _authenticated_request(
         "POST",
@@ -2860,22 +2826,12 @@ def _create_asset_url(
         **request_kwargs,
     )
     if not isinstance(response, dict):
-        raise MuralAPIError(
-            0, "ASSET_URL_INVALID", "asset response is not an object"
-        )
+        raise MuralAPIError(0, "ASSET_URL_INVALID", "asset response is not an object")
     value = (
-        response.get("value")
-        if isinstance(response.get("value"), dict)
-        else response
+        response.get("value") if isinstance(response.get("value"), dict) else response
     )
-    if (
-        not isinstance(value, dict)
-        or "url" not in value
-        or "name" not in value
-    ):
-        raise MuralAPIError(
-            0, "ASSET_URL_INVALID", "asset response missing url/name"
-        )
+    if not isinstance(value, dict) or "url" not in value or "name" not in value:
+        raise MuralAPIError(0, "ASSET_URL_INVALID", "asset response missing url/name")
     return value
 
 
@@ -2916,21 +2872,15 @@ def _upload_to_sas(
         with _http(request) as resp:  # type: ignore[arg-type]
             status = getattr(resp, "status", 200)
             if status >= 400:
-                payload = _read_response_body(resp).decode(
-                    "utf-8", errors="replace"
-                )
-                raise MuralAPIError(
-                    status, "ASSET_UPLOAD_FAILED", payload
-                )
+                payload = _read_response_body(resp).decode("utf-8", errors="replace")
+                raise MuralAPIError(status, "ASSET_UPLOAD_FAILED", payload)
     except urllib.error.HTTPError as exc:
         text = _read_response_body(exc).decode("utf-8", errors="replace")
         raise MuralAPIError(
             exc.code, "ASSET_UPLOAD_FAILED", text or "upload failed"
         ) from exc
     except urllib.error.URLError as exc:
-        raise MuralError(
-            f"network error uploading to asset url: {exc}"
-        ) from exc
+        raise MuralError(f"network error uploading to asset url: {exc}") from exc
 
 
 # ---------------------------------------------------------------------------
@@ -3027,7 +2977,8 @@ def _cmd_auth_login(args: argparse.Namespace) -> int:
         if not env_scopes.strip():
             try:
                 raise MuralValidationError(
-                    "INVALID_SCOPES: " + ENV_SCOPES
+                    "INVALID_SCOPES: "
+                    + ENV_SCOPES
                     + " is set but contains no scope tokens"
                 )
             except MuralError as exc:
@@ -3163,10 +3114,7 @@ def _cmd_auth_setup(args: argparse.Namespace) -> int:
     except MuralError as exc:
         _emit(str(exc), level=logging.ERROR)
         return EXIT_USAGE
-    client_id = (
-        getattr(args, "client_id", None)
-        or os.environ.get(ENV_CLIENT_ID)
-    )
+    client_id = getattr(args, "client_id", None) or os.environ.get(ENV_CLIENT_ID)
     if not client_id:
         _emit(
             f"{ENV_CLIENT_ID} is not set and --client-id was not provided",
@@ -3370,9 +3318,7 @@ def _cmd_auth_bootstrap(args: argparse.Namespace) -> int:
     # Stage 4: prompt for credentials with hidden secret entry.
     try:
         client_id = input("Mural Client ID: ").strip()
-        client_secret = getpass.getpass(
-            "Mural Client Secret (input hidden): "
-        ).strip()
+        client_secret = getpass.getpass("Mural Client Secret (input hidden): ").strip()
     except EOFError:
         _emit(
             "aborted at prompt; no credentials written",
@@ -3603,9 +3549,7 @@ def _logout_remove_credentials(
     result["backend"] = backend.name
     if isinstance(backend, _NullBackend):
         result["status"] = "skipped"
-        result["reason"] = (
-            "MURAL_CREDENTIAL_BACKEND=env-only has no persistence layer"
-        )
+        result["reason"] = "MURAL_CREDENTIAL_BACKEND=env-only has no persistence layer"
         return result
     if isinstance(backend, FileBackend) and require_force_for_file:
         result["status"] = "requires_force"
@@ -3684,9 +3628,7 @@ def _cmd_auth_logout(args: argparse.Namespace) -> int:
             # profile so we still try to clean its backend entries.
             for name in profile_names or [DEFAULT_PROFILE_NAME]:
                 credentials_results.append(
-                    _logout_remove_credentials(
-                        name, require_force_for_file=not force
-                    )
+                    _logout_remove_credentials(name, require_force_for_file=not force)
                 )
         if json_mode:
             print(
@@ -3713,11 +3655,7 @@ def _cmd_auth_logout(args: argparse.Namespace) -> int:
         if not store:
             credentials_results = []
             if not keep_credentials:
-                fallback = (
-                    target
-                    or os.environ.get(ENV_PROFILE)
-                    or DEFAULT_PROFILE_NAME
-                )
+                fallback = target or os.environ.get(ENV_PROFILE) or DEFAULT_PROFILE_NAME
                 try:
                     fallback = _validate_profile_name(fallback)
                 except MuralError as exc:
@@ -3773,9 +3711,7 @@ def _cmd_auth_logout(args: argparse.Namespace) -> int:
     credentials_results = []
     if not keep_credentials:
         credentials_results.append(
-            _logout_remove_credentials(
-                target, require_force_for_file=not force
-            )
+            _logout_remove_credentials(target, require_force_for_file=not force)
         )
     if json_mode:
         print(
@@ -3822,8 +3758,7 @@ def _emit_logout_credential_summary(entry: dict[str, Any]) -> None:
         )
     elif status == "absent":
         _emit(
-            f"no credentials present for profile {profile!r} "
-            f"in {backend} backend",
+            f"no credentials present for profile {profile!r} in {backend} backend",
             level=logging.INFO,
         )
     elif status == "skipped":
@@ -3897,9 +3832,7 @@ def _cmd_auth_status(args: argparse.Namespace) -> int:
     if cred_path.exists():
         try:
             file_entries = FileBackend(cred_path)._read_all()
-            file_populated = any(
-                file_entries.get(k) for k in _KNOWN_CREDENTIAL_KEYS
-            )
+            file_populated = any(file_entries.get(k) for k in _KNOWN_CREDENTIAL_KEYS)
         except Exception:  # noqa: BLE001 - probe must never raise
             file_populated = False
     concurrent_state = {
@@ -3988,9 +3921,11 @@ def _cmd_auth_migrate(args: argparse.Namespace) -> int:
     cleanup = bool(getattr(args, "cleanup", False))
     force = bool(getattr(args, "force", False))
     yes = bool(getattr(args, "yes", False))
-    noninteractive = (
-        os.environ.get("MURAL_NONINTERACTIVE", "").lower() in {"1", "true", "yes"}
-    )
+    noninteractive = os.environ.get("MURAL_NONINTERACTIVE", "").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
 
     cred_path = _resolve_credential_file(profile, os.environ)
     service = _service_name_for(profile)
@@ -4132,8 +4067,7 @@ def _cmd_auth_migrate(args: argparse.Namespace) -> int:
         if isinstance(source, FileBackend) and not force:
             summary["status"] = "migrated_cleanup_requires_force"
             summary["cleanup_blocked_reason"] = (
-                "FileBackend cleanup requires --force "
-                "(removes credential file)"
+                "FileBackend cleanup requires --force (removes credential file)"
             )
             if json_mode:
                 print(json.dumps(summary, indent=2))
@@ -4160,10 +4094,14 @@ def _cmd_auth_migrate(args: argparse.Namespace) -> int:
                     )
                 return EXIT_USAGE
             try:
-                response = input(
-                    f"Remove migrated credentials from {source_name} backend "
-                    f"for profile {profile!r}? [y/N] "
-                ).strip().lower()
+                response = (
+                    input(
+                        f"Remove migrated credentials from {source_name} backend "
+                        f"for profile {profile!r}? [y/N] "
+                    )
+                    .strip()
+                    .lower()
+                )
             except (EOFError, KeyboardInterrupt):
                 response = ""
             if response not in {"y", "yes"}:
@@ -4235,9 +4173,7 @@ def _list_kwargs(args: argparse.Namespace) -> dict[str, int | None]:
         if value is not None and value > _MAX_PAGE_SIZE * 100:
             raise MuralValidationError(f"{name} exceeds safe maximum")
     if page_size is not None and page_size > _MAX_PAGE_SIZE:
-        raise MuralValidationError(
-            f"--page-size cannot exceed {_MAX_PAGE_SIZE}"
-        )
+        raise MuralValidationError(f"--page-size cannot exceed {_MAX_PAGE_SIZE}")
     return {"limit": limit, "page_size": page_size, "max_pages": max_pages}
 
 
@@ -4322,9 +4258,7 @@ def _get_area(mural_id: str, area_id: str) -> dict[str, Any]:
     cached = _area_cache.get(area_id)
     if cached is not None:
         return cached
-    record = _authenticated_request(
-        "GET", f"/murals/{mural_id}/areas/{area_id}"
-    )
+    record = _authenticated_request("GET", f"/murals/{mural_id}/areas/{area_id}")
     if not isinstance(record, dict):
         raise MuralAPIError(0, "AREA_INVALID", "area response is not an object")
     _area_cache[area_id] = record
@@ -4403,9 +4337,7 @@ def _list_areas_with_widget_fallback(
     return records
 
 
-def _get_area_with_widget_fallback(
-    mural_id: str, area_id: str
-) -> dict[str, Any]:
+def _get_area_with_widget_fallback(mural_id: str, area_id: str) -> dict[str, Any]:
     """Get an area, transparently falling back to ``/widgets/{id}`` on 404."""
     try:
         return _get_area(mural_id, area_id)
@@ -4413,9 +4345,7 @@ def _get_area_with_widget_fallback(
         if exc.status != 404:
             raise
     _log_area_fallback_once(mural_id)
-    record = _authenticated_request(
-        "GET", f"/murals/{mural_id}/widgets/{area_id}"
-    )
+    record = _authenticated_request("GET", f"/murals/{mural_id}/widgets/{area_id}")
     if not isinstance(record, dict):
         raise MuralAPIError(404, "AREA_INVALID", "widget response is not an object")
     if record.get("type") != "area":
@@ -4430,9 +4360,7 @@ def _get_area_with_widget_fallback(
 
 def _get_widget_with_context(mural_id: str, widget_id: str) -> dict[str, Any]:
     """Return the widget plus its area_chain, siblings, and cluster envelope."""
-    widget = _authenticated_request(
-        "GET", f"/murals/{mural_id}/widgets/{widget_id}"
-    )
+    widget = _authenticated_request("GET", f"/murals/{mural_id}/widgets/{widget_id}")
     parent_id = widget.get("parentId") if isinstance(widget, dict) else None
     area_chain = _walk_area_chain(mural_id, parent_id) if parent_id else []
     siblings: list[Any] = []
@@ -4482,9 +4410,7 @@ def _list_widgets_with_context(
         if not isinstance(widget, dict):
             continue
         widget_parent = widget.get("parentId")
-        chain = (
-            _walk_area_chain(mural_id, widget_parent) if widget_parent else []
-        )
+        chain = _walk_area_chain(mural_id, widget_parent) if widget_parent else []
         enriched.append({"widget": widget, "area_chain": chain, "cluster": None})
     return enriched
 
@@ -4503,9 +4429,7 @@ _TAG_CAP_HINTS: tuple[str, ...] = (
 def _is_tag_cap_error(exc: MuralAPIError) -> bool:
     if exc.status != 400:
         return False
-    haystack = " ".join(
-        str(part).lower() for part in (exc.code, exc.message) if part
-    )
+    haystack = " ".join(str(part).lower() for part in (exc.code, exc.message) if part)
     return any(hint in haystack for hint in _TAG_CAP_HINTS)
 
 
@@ -4555,13 +4479,9 @@ def _ensure_tag_manifest(
         if text in by_text:
             continue
         created = _create_tag(mural_id, text, entry.get("color"))
-        new_id = (
-            created.get("id") if isinstance(created, dict) else None
-        )
+        new_id = created.get("id") if isinstance(created, dict) else None
         if not isinstance(new_id, str):
-            raise MuralAPIError(
-                0, "TAG_INVALID", "tag create response missing id"
-            )
+            raise MuralAPIError(0, "TAG_INVALID", "tag create response missing id")
         by_text[text] = new_id
     return by_text
 
@@ -4690,9 +4610,7 @@ def _merge_tags(
 
 def _ensure_reserved_author_tag(mural_id: str) -> str:
     """Return the tag id for ``authored-by-ai`` on ``mural_id`` (creating it)."""
-    mapping = _ensure_tag_manifest(
-        mural_id, [{"text": _AUTHORED_BY_AI_TAG_TEXT}]
-    )
+    mapping = _ensure_tag_manifest(mural_id, [{"text": _AUTHORED_BY_AI_TAG_TEXT}])
     return mapping[_AUTHORED_BY_AI_TAG_TEXT]
 
 
@@ -4730,25 +4648,18 @@ def _maybe_apply_author_tag(
         return _merge_tags(mural_id, widget_id, additions=[tag_id])
     except MuralError as exc:
         print(
-            f"warning: could not attach 'authored-by-ai' tag to "
-            f"{widget_id}: {exc}",
+            f"warning: could not attach 'authored-by-ai' tag to {widget_id}: {exc}",
             file=sys.stderr,
         )
         return None
 
 
-def _assert_widget_has_author_tag(
-    mural_id: str, widget_id: str
-) -> None:
+def _assert_widget_has_author_tag(mural_id: str, widget_id: str) -> None:
     """Raise :class:`MuralHumanAuthoredProtected` if the AI tag is absent."""
     tag_id = _ensure_reserved_author_tag(mural_id)
-    widget = _authenticated_request(
-        "GET", f"/murals/{mural_id}/widgets/{widget_id}"
-    )
+    widget = _authenticated_request("GET", f"/murals/{mural_id}/widgets/{widget_id}")
     if tag_id not in _widget_tag_ids(widget):
-        raise MuralHumanAuthoredProtected(
-            mural_id=mural_id, widget_id=widget_id
-        )
+        raise MuralHumanAuthoredProtected(mural_id=mural_id, widget_id=widget_id)
 
 
 def _is_reserved_tag_id(mural_id: str, tag_id: str) -> bool:
@@ -4797,9 +4708,7 @@ def safe_rect(x: float, y: float, w: float, h: float) -> Rect:
     return {"x": nx, "y": ny, "w": abs(w), "h": abs(h)}
 
 
-def point_in_rect(
-    px: float, py: float, rect: Rect, eps: float = 1e-6
-) -> bool:
+def point_in_rect(px: float, py: float, rect: Rect, eps: float = 1e-6) -> bool:
     """Return ``True`` when ``(px, py)`` lies inside ``rect``.
 
     Inclusion is tested against an eps-expanded boundary so floating-point
@@ -5164,9 +5073,7 @@ def sort_along_axis(
         inv_sqrt2 = 1.0 / math.sqrt(2.0)
         ax, ay = inv_sqrt2, inv_sqrt2
     else:
-        raise ValueError(
-            f"axis must be one of 'x', 'y', 'diagonal'; got {axis!r}"
-        )
+        raise ValueError(f"axis must be one of 'x', 'y', 'diagonal'; got {axis!r}")
     ox, oy = (0.0, 0.0) if origin is None else (float(origin[0]), float(origin[1]))
     use_abs = origin is not None
 
@@ -5222,9 +5129,7 @@ def ray_cast_pip(
     for i in range(n):
         xi, yi = polygon[i]
         xj, yj = polygon[j]
-        if ((yi > y) != (yj > y)) and (
-            x < (xj - xi) * (y - yi) / (yj - yi) + xi
-        ):
+        if ((yi > y) != (yj > y)) and (x < (xj - xi) * (y - yi) / (yj - yi) + xi):
             inside = not inside
         j = i
     return inside
@@ -5285,16 +5190,12 @@ def build_arrow_graph(
             ex = float(arrow["x2"])
             ey = float(arrow["y2"])
         except (KeyError, TypeError, ValueError):
-            LOGGER.warning(
-                "arrow %s has no anchor within snap_radius", arrow_id
-            )
+            LOGGER.warning("arrow %s has no anchor within snap_radius", arrow_id)
             continue
         src = _nearest(sx, sy)
         dst = _nearest(ex, ey)
         if src is None or dst is None:
-            LOGGER.warning(
-                "arrow %s has no anchor within snap_radius", arrow_id
-            )
+            LOGGER.warning("arrow %s has no anchor within snap_radius", arrow_id)
             continue
         graph.add_edge(src, dst, key=arrow_id, arrow_widget=arrow)
     return graph
@@ -5353,9 +5254,7 @@ def _layout_canonical_widget(widget: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(widget, dict):
         return {}
     keep = {
-        k: v
-        for k, v in widget.items()
-        if k not in {"x", "y", "width", "height", "id"}
+        k: v for k, v in widget.items() if k not in {"x", "y", "width", "height", "id"}
     }
     return keep
 
@@ -5445,8 +5344,7 @@ def _area_overflow(
     """Return ``(overflow, capacity)`` comparing the envelope to the area bounds."""
     capacity = _area_capacity(area)
     overflow = (
-        envelope["width"] > capacity["width"]
-        or envelope["height"] > capacity["height"]
+        envelope["width"] > capacity["width"] or envelope["height"] > capacity["height"]
     )
     return overflow, capacity
 
@@ -5612,9 +5510,7 @@ def _execute_layout(
                 "a larger area before re-running this layout."
             ),
         )
-    digest = _layout_hash(
-        area_id=area_id, layout=layout, widgets=placed, params=params
-    )
+    digest = _layout_hash(area_id=area_id, layout=layout, widgets=placed, params=params)
     layout_tag_text = f"{_LAYOUT_HASH_PREFIX}{digest}"
     for w in placed:
         existing = list(w.get("tags") or [])
@@ -5674,18 +5570,14 @@ def _repair_tag_drift(mural_id: str) -> list[dict[str, Any]]:
         mural_id,
         [
             {"text": t}
-            for t in sorted(
-                {t for k in keys for t in _SessionManifest.get(k, set())}
-            )
+            for t in sorted({t for k in keys for t in _SessionManifest.get(k, set())})
         ],
     )
     for mid, widget_id in keys:
         intended_text = _SessionManifest.get((mid, widget_id), set())
         intended_ids = {tag_text_to_id[t] for t in intended_text if t in tag_text_to_id}
         try:
-            widget = _authenticated_request(
-                "GET", f"/murals/{mid}/widgets/{widget_id}"
-            )
+            widget = _authenticated_request("GET", f"/murals/{mid}/widgets/{widget_id}")
         except MuralAPIError as exc:
             repaired.append(
                 {"widget_id": widget_id, "repaired": False, "warning": str(exc)}
@@ -5745,9 +5637,7 @@ def _confirmation_register(
     return preview_id
 
 
-def _confirmation_consume(
-    *, tool: str, confirmed_id: str
-) -> dict[str, Any]:
+def _confirmation_consume(*, tool: str, confirmed_id: str) -> dict[str, Any]:
     """Return the registered preview for ``confirmed_id`` or raise."""
     entry = _PENDING_CONFIRMATIONS.pop(confirmed_id, None)
     if entry is None:
@@ -5755,9 +5645,7 @@ def _confirmation_consume(
             "confirmation_id_mismatch: no pending preview for this id"
         )
     if entry["expires_at"] < time.time():
-        raise MuralValidationError(
-            "confirmation_id_mismatch: preview expired"
-        )
+        raise MuralValidationError("confirmation_id_mismatch: preview expired")
     if entry["tool"] != tool:
         raise MuralValidationError(
             "confirmation_id_mismatch: tool name does not match preview"
@@ -5845,9 +5733,7 @@ def _tool_parking_lot_sweep(arguments: dict[str, Any]) -> Any:
     mural_id = _validate_mural_id(arguments.get("mural"))
     area_id = arguments.get("area")
     tag_text = arguments.get("tag", "parking-lot")
-    widgets = list(
-        _paginate("GET", f"/murals/{mural_id}/widgets")
-    )
+    widgets = list(_paginate("GET", f"/murals/{mural_id}/widgets"))
     # Resolve tag id once; if absent on the mural, treat as empty manifest.
     try:
         manifest = _ensure_tag_manifest(mural_id, [{"text": tag_text}])
@@ -5891,9 +5777,7 @@ def _load_dt_sections_map(
     here = pathlib.Path(__file__).resolve().parent
     default_path = here.parent / "assets" / "dt-sections.default.yml"
     if not default_path.exists():
-        raise MuralValidationError(
-            f"dt-sections default missing at {default_path}"
-        )
+        raise MuralValidationError(f"dt-sections default missing at {default_path}")
     try:
         defaults = _parse_simple_yaml(default_path.read_text(encoding="utf-8"))
     except Exception as exc:
@@ -6164,9 +6048,7 @@ def _tool_bootstrap_ux_board(arguments: dict[str, Any]) -> Any:
             created_areas.append({"label": label, "error": str(exc)})
             continue
         area_id = area.get("id") if isinstance(area, dict) else None
-        created_areas.append(
-            {"id": area_id, "label": label, "anchor_widget_id": None}
-        )
+        created_areas.append({"id": area_id, "label": label, "anchor_widget_id": None})
     return {
         "mural_id": mural_id,
         "workspace_id": workspace_id,
@@ -6255,9 +6137,7 @@ def _tool_bootstrap_dt_board(arguments: dict[str, Any]) -> Any:
                 "POST", f"/murals/{mural_id}/areas", json_body=area_body
             )
         except MuralError as exc:
-            created_areas.append(
-                {"section": section_name, "error": str(exc)}
-            )
+            created_areas.append({"section": section_name, "error": str(exc)})
             continue
         created_areas.append({"section": section_name, "area": area})
         _ensure_tag_manifest(mural_id, [{"text": f"dt-section:{section_name}"}])
@@ -6289,9 +6169,7 @@ def _tool_populate_dt_section(arguments: dict[str, Any]) -> Any:
         )
     section_tag = f"dt-section:{section}"
     method_tag = f"dt-method:{method}"
-    _ensure_tag_manifest(
-        mural_id, [{"text": section_tag}, {"text": method_tag}]
-    )
+    _ensure_tag_manifest(mural_id, [{"text": section_tag}, {"text": method_tag}])
     widgets: list[dict[str, Any]] = []
     for item in items:
         if isinstance(item, str):
@@ -6391,9 +6269,7 @@ def _tool_create_affinity_cluster(arguments: dict[str, Any]) -> Any:
         except MuralAreaCapacityExceeded:
             raise
         except MuralError as exc:
-            placements.append(
-                {"label": label, "error": str(exc)}
-            )
+            placements.append({"label": label, "error": str(exc)})
             continue
         placements.append({"label": label, "slug": slug, "placement": placement})
         # Advance origin to the right of the previous cluster envelope.
@@ -6610,9 +6486,7 @@ def _cmd_spatial_widgets_in_shape(args: argparse.Namespace) -> int:
     """
     _ensure_geos_ready()
     mural_id = _validate_mural_id(args.mural_id)
-    shape = _authenticated_request(
-        "GET", f"/murals/{mural_id}/widgets/{args.shape_id}"
-    )
+    shape = _authenticated_request("GET", f"/murals/{mural_id}/widgets/{args.shape_id}")
     if not isinstance(shape, dict):
         raise MuralAPIError(
             0, "WIDGET_INVALID", "shape widget response is not an object"
@@ -6762,12 +6636,8 @@ def _cmd_spatial_arrow_graph(args: argparse.Namespace) -> int:
             **_list_kwargs(args),
         )
     )
-    arrows = [
-        w for w in all_widgets if str(w.get("type", "")).lower() == "arrow"
-    ]
-    targets = [
-        w for w in all_widgets if str(w.get("type", "")).lower() != "arrow"
-    ]
+    arrows = [w for w in all_widgets if str(w.get("type", "")).lower() == "arrow"]
+    targets = [w for w in all_widgets if str(w.get("type", "")).lower() != "arrow"]
     snap_radius = float(args.snap_radius)
     if snap_radius <= 0.0:
         print(
@@ -6796,8 +6666,7 @@ def _cmd_spatial_arrow_graph(args: argparse.Namespace) -> int:
             lines.append(f'  "{node}";')
         for edge in summary["edges"]:
             lines.append(
-                f'  "{edge["source"]}" -> "{edge["target"]}" '
-                f'[label="{edge["id"]}"];'
+                f'  "{edge["source"]}" -> "{edge["target"]}" [label="{edge["id"]}"];'
             )
         lines.append("}")
         text = "\n".join(lines)
@@ -6922,9 +6791,7 @@ def _cmd_widget_list(args: argparse.Namespace) -> int:
 
 def _cmd_widget_get(args: argparse.Namespace) -> int:
     mural_id = _validate_mural_id(args.mural)
-    record = _authenticated_request(
-        "GET", f"/murals/{mural_id}/widgets/{args.widget}"
-    )
+    record = _authenticated_request("GET", f"/murals/{mural_id}/widgets/{args.widget}")
     return _emit_record(record, args)
 
 
@@ -6934,9 +6801,7 @@ def _cmd_widget_delete(args: argparse.Namespace) -> int:
         args, "force_human", False
     ):
         _assert_widget_has_author_tag(mural_id, args.widget)
-    _authenticated_request(
-        "DELETE", f"/murals/{mural_id}/widgets/{args.widget}"
-    )
+    _authenticated_request("DELETE", f"/murals/{mural_id}/widgets/{args.widget}")
     print(json.dumps({"ok": True, "deleted": args.widget}))
     return EXIT_SUCCESS
 
@@ -6960,9 +6825,7 @@ def _patch_widget_or_disambiguate_404(
     typed_path = _typed_widget_path(mural_id, widget_id, widget_type)
     if typed_path is not None:
         try:
-            return _authenticated_request(
-                "PATCH", typed_path, json_body=body
-            )
+            return _authenticated_request("PATCH", typed_path, json_body=body)
         except MuralAPIError as exc:
             if exc.status != 404:
                 raise
@@ -7026,18 +6889,14 @@ def _patch_widget_or_disambiguate_404(
 def _cmd_widget_update(args: argparse.Namespace) -> int:
     mural_id = _validate_mural_id(args.mural)
     body_arg = getattr(args, "body", None)
-    body: dict[str, Any] = (
-        _parse_json_arg(body_arg, "--body") if body_arg else {}
-    )
+    body: dict[str, Any] = _parse_json_arg(body_arg, "--body") if body_arg else {}
     if not isinstance(body, dict):
         raise MuralValidationError("--body must decode to a JSON object")
     hyperlink = getattr(args, "hyperlink", None)
     if hyperlink is not None:
         body["hyperlink"] = _validate_hyperlink(hyperlink)
     if not body:
-        raise MuralValidationError(
-            "widget update requires --body or --hyperlink"
-        )
+        raise MuralValidationError("widget update requires --body or --hyperlink")
     if getattr(args, "require_author_tag", False) and not getattr(
         args, "force_human", False
     ):
@@ -7065,30 +6924,22 @@ def _create_widget(
 
 def _cmd_widget_create_sticky_note(args: argparse.Namespace) -> int:
     mural_id = _validate_mural_id(args.mural)
-    return _create_widget(
-        mural_id, "sticky-note", _build_sticky_note_body(args), args
-    )
+    return _create_widget(mural_id, "sticky-note", _build_sticky_note_body(args), args)
 
 
 def _cmd_widget_create_textbox(args: argparse.Namespace) -> int:
     mural_id = _validate_mural_id(args.mural)
-    return _create_widget(
-        mural_id, "textbox", _build_textbox_body(args), args
-    )
+    return _create_widget(mural_id, "textbox", _build_textbox_body(args), args)
 
 
 def _cmd_widget_create_shape(args: argparse.Namespace) -> int:
     mural_id = _validate_mural_id(args.mural)
-    return _create_widget(
-        mural_id, "shape", _build_shape_body(args), args
-    )
+    return _create_widget(mural_id, "shape", _build_shape_body(args), args)
 
 
 def _cmd_widget_create_arrow(args: argparse.Namespace) -> int:
     mural_id = _validate_mural_id(args.mural)
-    return _create_widget(
-        mural_id, "arrow", _build_arrow_body(args), args
-    )
+    return _create_widget(mural_id, "arrow", _build_arrow_body(args), args)
 
 
 def _cmd_widget_create_image(args: argparse.Namespace) -> int:
@@ -7142,9 +6993,7 @@ def _cmd_tag_list(args: argparse.Namespace) -> int:
 
 def _cmd_tag_create(args: argparse.Namespace) -> int:
     mural_id = _validate_mural_id(args.mural)
-    record = _create_tag(
-        mural_id, args.text, getattr(args, "color", None)
-    )
+    record = _create_tag(mural_id, args.text, getattr(args, "color", None))
     return _emit_record(record, args)
 
 
@@ -7153,9 +7002,7 @@ def _cmd_tag_apply(args: argparse.Namespace) -> int:
     tag_id = getattr(args, "tag", None)
     text = getattr(args, "text", None)
     if not tag_id and not text:
-        raise MuralValidationError(
-            "tag apply requires --tag or --text"
-        )
+        raise MuralValidationError("tag apply requires --tag or --text")
     if not tag_id:
         manifest = [{"text": _validate_tag_text(text)}]
         if getattr(args, "color", None):
@@ -7184,9 +7031,7 @@ def _cmd_tag_remove(args: argparse.Namespace) -> int:
 
 def _cmd_area_list(args: argparse.Namespace) -> int:
     mural_id = _validate_mural_id(args.mural)
-    records = _list_areas_with_widget_fallback(
-        mural_id, **_list_kwargs(args)
-    )
+    records = _list_areas_with_widget_fallback(mural_id, **_list_kwargs(args))
     return _emit_records(records, args)
 
 
@@ -7199,9 +7044,7 @@ def _cmd_area_get(args: argparse.Namespace) -> int:
 def _cmd_area_create(args: argparse.Namespace) -> int:
     mural_id = _validate_mural_id(args.mural)
     body = _build_area_body(args)
-    record = _authenticated_request(
-        "POST", f"/murals/{mural_id}/areas", json_body=body
-    )
+    record = _authenticated_request("POST", f"/murals/{mural_id}/areas", json_body=body)
     if isinstance(record, dict):
         area_id = record.get("id")
         if isinstance(area_id, str):
@@ -7277,15 +7120,12 @@ def _build_bulk_widgets_payload(raw: Any) -> list[dict[str, Any]]:
         raise MuralValidationError("bulk widgets payload is empty")
     if len(widgets) > MAX_BULK_WIDGETS:
         raise MuralValidationError(
-            f"bulk create exceeds {MAX_BULK_WIDGETS} widgets "
-            f"(received {len(widgets)})"
+            f"bulk create exceeds {MAX_BULK_WIDGETS} widgets (received {len(widgets)})"
         )
     cleaned: list[dict[str, Any]] = []
     for index, entry in enumerate(widgets):
         if not isinstance(entry, dict):
-            raise MuralValidationError(
-                f"bulk widgets[{index}] must be a JSON object"
-            )
+            raise MuralValidationError(f"bulk widgets[{index}] must be a JSON object")
         if not isinstance(entry.get("type"), str) or not entry["type"]:
             raise MuralValidationError(
                 f"bulk widgets[{index}].type must be a non-empty string"
@@ -7322,7 +7162,7 @@ def _bulk_create_widgets(
         if isinstance(tags, list):
             for t in tags:
                 if isinstance(t, str) and t.startswith(_LAYOUT_HASH_PREFIX):
-                    entry_hash = t[len(_LAYOUT_HASH_PREFIX):]
+                    entry_hash = t[len(_LAYOUT_HASH_PREFIX) :]
                     break
         if area_id and entry_hash:
             if area_id not in seen_areas:
@@ -7420,9 +7260,7 @@ def _bulk_apply_author_tag(
     try:
         tag_id = _ensure_reserved_author_tag(mural_id)
     except MuralError as exc:
-        result.setdefault("warnings", []).append(
-            f"author-tag setup failed: {exc}"
-        )
+        result.setdefault("warnings", []).append(f"author-tag setup failed: {exc}")
         return
     warnings = result.setdefault("warnings", [])
     for entry in succeeded:
@@ -7432,9 +7270,7 @@ def _bulk_apply_author_tag(
         try:
             _merge_tags(mural_id, widget_id, additions=[tag_id])
         except MuralError as exc:
-            warnings.append(
-                f"author-tag attach failed for widget {widget_id}: {exc}"
-            )
+            warnings.append(f"author-tag attach failed for widget {widget_id}: {exc}")
 
 
 _BULK_UPDATE_MAX_WORKERS = 8
@@ -7460,15 +7296,12 @@ def _build_bulk_widget_updates_payload(raw: Any) -> list[dict[str, Any]]:
         raise MuralValidationError("bulk updates payload is empty")
     if len(updates) > MAX_BULK_WIDGETS:
         raise MuralValidationError(
-            f"bulk update exceeds {MAX_BULK_WIDGETS} widgets "
-            f"(received {len(updates)})"
+            f"bulk update exceeds {MAX_BULK_WIDGETS} widgets (received {len(updates)})"
         )
     cleaned: list[dict[str, Any]] = []
     for index, entry in enumerate(updates):
         if not isinstance(entry, dict):
-            raise MuralValidationError(
-                f"bulk updates[{index}] must be a JSON object"
-            )
+            raise MuralValidationError(f"bulk updates[{index}] must be a JSON object")
         widget_id = entry.get("widget_id") or entry.get("widgetId")
         if not isinstance(widget_id, str) or not widget_id:
             raise MuralValidationError(
@@ -7521,18 +7354,14 @@ def _bulk_update_widgets(
 
     workers = min(_BULK_UPDATE_MAX_WORKERS, max(1, len(updates)))
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
-        future_to_item = {
-            pool.submit(_patch_one, item): item for item in updates
-        }
+        future_to_item = {pool.submit(_patch_one, item): item for item in updates}
         try:
             for future in concurrent.futures.as_completed(future_to_item):
                 item = future_to_item[future]
                 try:
                     succeeded.append(future.result())
                 except Exception as exc:  # noqa: BLE001
-                    failed.append(
-                        {"widget_id": item["widget_id"], "error": str(exc)}
-                    )
+                    failed.append({"widget_id": item["widget_id"], "error": str(exc)})
                     if atomic:
                         for pending in future_to_item:
                             if not pending.done():
@@ -7686,9 +7515,7 @@ def _bulk_delete_widgets(
     failed: list[dict[str, Any]] = []
     for wid in widget_ids:
         try:
-            _authenticated_request(
-                "DELETE", f"/murals/{mural_id}/widgets/{wid}"
-            )
+            _authenticated_request("DELETE", f"/murals/{mural_id}/widgets/{wid}")
             succeeded.append(wid)
         except MuralError as exc:
             failed.append({"widget_id": wid, "error": str(exc)})
@@ -7698,8 +7525,7 @@ def _bulk_delete_widgets(
                         "succeeded": succeeded,
                         "failed": failed,
                         "warnings": [
-                            f"delete failed for {wid} ({exc}); "
-                            "aborting under --atomic"
+                            f"delete failed for {wid} ({exc}); aborting under --atomic"
                         ],
                     }
                 ) from exc
@@ -7840,7 +7666,6 @@ def _cmd_widget_diff(args: argparse.Namespace) -> int:
     return _emit_record(result, args)
 
 
-
 def _duplicate_mural(source_mural_id: str) -> str:
     """POST ``/murals/{id}/duplicate`` and return the new mural id.
 
@@ -7848,9 +7673,7 @@ def _duplicate_mural(source_mural_id: str) -> str:
     ``id`` field; the new mural identifier is required for downstream
     workflows such as :func:`_cmd_clone_with_tags`.
     """
-    response = _authenticated_request(
-        "POST", f"/murals/{source_mural_id}/duplicate"
-    )
+    response = _authenticated_request("POST", f"/murals/{source_mural_id}/duplicate")
     new_id: Any = None
     if isinstance(response, dict):
         new_id = response.get("id") or (
@@ -7894,18 +7717,14 @@ def _cmd_clone_with_tags(args: argparse.Namespace) -> int:
     source_id = _validate_mural_id(args.mural)
     source_manifest = _read_tag_manifest(source_id)
     new_id = _duplicate_mural(source_id)
-    tag_map = (
-        _ensure_tag_manifest(new_id, source_manifest) if source_manifest else {}
-    )
+    tag_map = _ensure_tag_manifest(new_id, source_manifest) if source_manifest else {}
     return _emit_record(
         {
             "source_mural_id": source_id,
             "new_mural_id": new_id,
             "tag_count": len(tag_map),
             "tag_map": tag_map,
-            "warnings": [
-                "widget ids are not preserved across mural duplication"
-            ],
+            "warnings": ["widget ids are not preserved across mural duplication"],
         },
         args,
     )
@@ -7985,7 +7804,7 @@ def _parse_poll_condition(condition: str) -> tuple[list[str], str, str]:
             "poll condition must be 'path op value' with op == or !="
         )
     path = text[:op_index].strip()
-    expected = text[op_index + len(op_used):].strip()
+    expected = text[op_index + len(op_used) :].strip()
     if not path or not expected:
         raise MuralValidationError(
             "poll condition path and expected value must be non-empty"
@@ -8030,9 +7849,7 @@ def _poll_mural(
             f"--interval must be ≤ {POLL_MAX_INTERVAL_S} seconds"
         )
     if timeout_s > POLL_MAX_TIMEOUT_S:
-        raise MuralValidationError(
-            f"--timeout must be ≤ {POLL_MAX_TIMEOUT_S} seconds"
-        )
+        raise MuralValidationError(f"--timeout must be ≤ {POLL_MAX_TIMEOUT_S} seconds")
     segments, op, expected = _parse_poll_condition(condition)
     deadline = monotonic() + timeout_s
     attempt = 0
@@ -8104,18 +7921,14 @@ def _voting_session_path(mural_id: str, session_id: str | None = None) -> str:
     return f"/murals/{mural_id}/voting-sessions/{session_id}"
 
 
-def _voting_session_create(
-    mural_id: str, body: dict[str, Any]
-) -> dict[str, Any]:
+def _voting_session_create(mural_id: str, body: dict[str, Any]) -> dict[str, Any]:
     return _authenticated_request(
         "POST", _voting_session_path(mural_id), json_body=body
     )
 
 
 def _voting_session_get(mural_id: str, session_id: str) -> dict[str, Any]:
-    return _authenticated_request(
-        "GET", _voting_session_path(mural_id, session_id)
-    )
+    return _authenticated_request("GET", _voting_session_path(mural_id, session_id))
 
 
 def _voting_session_list(
@@ -8141,9 +7954,7 @@ def _voting_session_set_status(
 
 
 def _voting_session_delete(mural_id: str, session_id: str) -> dict[str, Any]:
-    return _authenticated_request(
-        "DELETE", _voting_session_path(mural_id, session_id)
-    )
+    return _authenticated_request("DELETE", _voting_session_path(mural_id, session_id))
 
 
 def _voting_results(mural_id: str, session_id: str) -> dict[str, Any]:
@@ -8172,9 +7983,7 @@ def _poll_voting_session(
             f"--interval must be ≤ {POLL_MAX_INTERVAL_S} seconds"
         )
     if timeout_s > POLL_MAX_TIMEOUT_S:
-        raise MuralValidationError(
-            f"--timeout must be ≤ {POLL_MAX_TIMEOUT_S} seconds"
-        )
+        raise MuralValidationError(f"--timeout must be ≤ {POLL_MAX_TIMEOUT_S} seconds")
     segments, op, expected = _parse_poll_condition(condition)
     deadline = monotonic() + timeout_s
     attempt = 0
@@ -8559,9 +8368,7 @@ def _read_frame(stream: Any, limit: int = MURAL_MAX_FRAME_BYTES) -> bytes | None
                 chunk = stream.readline(chunk_size)
                 if not chunk:
                     break
-            raise FrameTooLarge(
-                f"mcp frame exceeds {limit} bytes"
-            )
+            raise FrameTooLarge(f"mcp frame exceeds {limit} bytes")
         if chunk.endswith(b"\n"):
             break
     if not pieces:
@@ -8816,9 +8623,7 @@ def _tool_widget_update(arguments: dict[str, Any]) -> Any:
         raise MuralValidationError("body must be a JSON object")
     if arguments.get("require_author_tag") and not arguments.get("force_human"):
         _assert_widget_has_author_tag(mural_id, arguments["widget"])
-    return _patch_widget_or_disambiguate_404(
-        mural_id, arguments["widget"], body
-    )
+    return _patch_widget_or_disambiguate_404(mural_id, arguments["widget"], body)
 
 
 def _tool_widget_delete(arguments: dict[str, Any]) -> Any:
@@ -8837,9 +8642,7 @@ def _tool_widget_create_sticky_note(arguments: dict[str, Any]) -> Any:
     record = _authenticated_request(
         "POST", f"/murals/{mural_id}/widgets/sticky-note", json_body=body
     )
-    _maybe_apply_author_tag(
-        mural_id, record, skip=bool(arguments.get("no_author_tag"))
-    )
+    _maybe_apply_author_tag(mural_id, record, skip=bool(arguments.get("no_author_tag")))
     return record
 
 
@@ -8849,9 +8652,7 @@ def _tool_widget_create_textbox(arguments: dict[str, Any]) -> Any:
     record = _authenticated_request(
         "POST", f"/murals/{mural_id}/widgets/textbox", json_body=body
     )
-    _maybe_apply_author_tag(
-        mural_id, record, skip=bool(arguments.get("no_author_tag"))
-    )
+    _maybe_apply_author_tag(mural_id, record, skip=bool(arguments.get("no_author_tag")))
     return record
 
 
@@ -8861,9 +8662,7 @@ def _tool_widget_create_shape(arguments: dict[str, Any]) -> Any:
     record = _authenticated_request(
         "POST", f"/murals/{mural_id}/widgets/shape", json_body=body
     )
-    _maybe_apply_author_tag(
-        mural_id, record, skip=bool(arguments.get("no_author_tag"))
-    )
+    _maybe_apply_author_tag(mural_id, record, skip=bool(arguments.get("no_author_tag")))
     return record
 
 
@@ -8873,9 +8672,7 @@ def _tool_widget_create_arrow(arguments: dict[str, Any]) -> Any:
     record = _authenticated_request(
         "POST", f"/murals/{mural_id}/widgets/arrow", json_body=body
     )
-    _maybe_apply_author_tag(
-        mural_id, record, skip=bool(arguments.get("no_author_tag"))
-    )
+    _maybe_apply_author_tag(mural_id, record, skip=bool(arguments.get("no_author_tag")))
     return record
 
 
@@ -8909,9 +8706,7 @@ def _tool_widget_create_image(arguments: dict[str, Any]) -> Any:
             asset_name=asset["name"], args=_ns_for_widget_body(arguments)
         ),
     )
-    _maybe_apply_author_tag(
-        mural_id, record, skip=bool(arguments.get("no_author_tag"))
-    )
+    _maybe_apply_author_tag(mural_id, record, skip=bool(arguments.get("no_author_tag")))
     return record
 
 
@@ -8951,9 +8746,7 @@ def _tool_tag_remove(arguments: dict[str, Any]) -> Any:
     mural_id = _validate_mural_id(arguments["mural"])
     widget_id = arguments["widget"]
     tag_id = arguments["tag"]
-    if _is_reserved_tag_id(mural_id, tag_id) and not arguments.get(
-        "force_reserved"
-    ):
+    if _is_reserved_tag_id(mural_id, tag_id) and not arguments.get("force_reserved"):
         raise MuralValidationError(
             f"refusing to remove reserved tag {tag_id!r}; "
             "pass 'force_reserved' to override"
@@ -8976,9 +8769,7 @@ def _tool_area_get(arguments: dict[str, Any]) -> Any:
 def _tool_area_create(arguments: dict[str, Any]) -> Any:
     mural_id = _validate_mural_id(arguments["mural"])
     body = _build_area_body(_ns_for_widget_body(arguments))
-    record = _authenticated_request(
-        "POST", f"/murals/{mural_id}/areas", json_body=body
-    )
+    record = _authenticated_request("POST", f"/murals/{mural_id}/areas", json_body=body)
     if isinstance(record, dict):
         area_id = record.get("id")
         if isinstance(area_id, str):
@@ -9006,9 +8797,7 @@ def _tool_widget_list_with_context(arguments: dict[str, Any]) -> Any:
 def _tool_auth_status(arguments: dict[str, Any]) -> Any:
     path = _resolve_token_store_path()
     profile_arg = arguments.get("profile") if isinstance(arguments, dict) else None
-    cred_profile = (
-        profile_arg or os.environ.get(ENV_PROFILE) or DEFAULT_PROFILE_NAME
-    )
+    cred_profile = profile_arg or os.environ.get(ENV_PROFILE) or DEFAULT_PROFILE_NAME
     cred_path = _resolve_credential_file(cred_profile, os.environ)
     cred_keys = {
         "credential_file": str(cred_path),
@@ -9131,9 +8920,7 @@ def _tool_spatial_sort_along_axis(arguments: dict[str, Any]) -> Any:
     elif ox is not None and oy is not None:
         origin = (float(ox), float(oy))
     else:
-        raise ValueError(
-            "origin_x and origin_y must be provided together"
-        )
+        raise ValueError("origin_x and origin_y must be provided together")
     return sort_along_axis(
         widgets,
         axis=str(arguments.get("axis", "x")),
@@ -9151,12 +8938,8 @@ def _tool_spatial_arrow_graph(arguments: dict[str, Any]) -> Any:
             **_list_kwargs(_ns_for_list(arguments)),
         )
     )
-    arrows = [
-        w for w in all_widgets if str(w.get("type", "")).lower() == "arrow"
-    ]
-    targets = [
-        w for w in all_widgets if str(w.get("type", "")).lower() != "arrow"
-    ]
+    arrows = [w for w in all_widgets if str(w.get("type", "")).lower() == "arrow"]
+    targets = [w for w in all_widgets if str(w.get("type", "")).lower() != "arrow"]
     snap_radius = float(arguments.get("snap_radius", 24.0))
     if snap_radius <= 0.0:
         raise ValueError("snap_radius must be greater than 0")
@@ -9181,8 +8964,7 @@ def _tool_spatial_arrow_graph(arguments: dict[str, Any]) -> Any:
             lines.append(f'  "{node}";')
         for edge in summary["edges"]:
             lines.append(
-                f'  "{edge["source"]}" -> "{edge["target"]}" '
-                f'[label="{edge["id"]}"];'
+                f'  "{edge["source"]}" -> "{edge["target"]}" [label="{edge["id"]}"];'
             )
         lines.append("}")
         return {"format": "dot", "text": "\n".join(lines)}
@@ -9195,9 +8977,7 @@ def _tool_widget_create_bulk(arguments: dict[str, Any]) -> Any:
     result = _bulk_create_widgets(
         mural_id, widgets, atomic=bool(arguments.get("atomic"))
     )
-    _bulk_apply_author_tag(
-        mural_id, result, skip=bool(arguments.get("no_author_tag"))
-    )
+    _bulk_apply_author_tag(mural_id, result, skip=bool(arguments.get("no_author_tag")))
     return result
 
 
@@ -9223,9 +9003,7 @@ def _tool_clone_with_tags(arguments: dict[str, Any]) -> Any:
     source_id = _validate_mural_id(arguments.get("mural"))
     source_manifest = _read_tag_manifest(source_id)
     new_id = _duplicate_mural(source_id)
-    tag_map = (
-        _ensure_tag_manifest(new_id, source_manifest) if source_manifest else {}
-    )
+    tag_map = _ensure_tag_manifest(new_id, source_manifest) if source_manifest else {}
     return {
         "source_mural_id": source_id,
         "new_mural_id": new_id,
@@ -9390,9 +9168,7 @@ _TAG_TEXT_PROPERTY: dict[str, Any] = {
     "type": "string",
     "minLength": 1,
     "maxLength": _MAX_TAG_TEXT_LEN,
-    "description": (
-        f"Tag label (max {_MAX_TAG_TEXT_LEN} chars per Mural API)."
-    ),
+    "description": (f"Tag label (max {_MAX_TAG_TEXT_LEN} chars per Mural API)."),
 }
 
 _DRY_RUN_PROPERTY: dict[str, Any] = {
@@ -9432,16 +9208,12 @@ _REQUIRE_AUTHOR_TAG_PROPERTY: dict[str, Any] = {
 _FORCE_HUMAN_PROPERTY: dict[str, Any] = {
     "type": "boolean",
     "default": False,
-    "description": (
-        "Override `require_author_tag` and act on human-authored widgets."
-    ),
+    "description": ("Override `require_author_tag` and act on human-authored widgets."),
 }
 _FORCE_RESERVED_PROPERTY: dict[str, Any] = {
     "type": "boolean",
     "default": False,
-    "description": (
-        "Allow removal of reserved tags such as 'authored-by-ai'."
-    ),
+    "description": ("Allow removal of reserved tags such as 'authored-by-ai'."),
 }
 
 # In-process idempotency cache for create-style tools. Bounded LRU using
@@ -11237,9 +11009,7 @@ def _validate_tool_registry() -> None:
             )
         schema = entry.get("input_schema")
         if not isinstance(schema, dict):
-            raise RuntimeError(
-                f"_TOOL_REGISTRY[{name!r}].input_schema must be a dict"
-            )
+            raise RuntimeError(f"_TOOL_REGISTRY[{name!r}].input_schema must be a dict")
         if schema.get("type") != "object":
             raise RuntimeError(
                 f"_TOOL_REGISTRY[{name!r}].input_schema.type must be 'object'"
@@ -11270,13 +11040,9 @@ def _validate_tool_registry() -> None:
                     f"undeclared properties: {unknown}"
                 )
         if not callable(entry.get("handler")):
-            raise RuntimeError(
-                f"_TOOL_REGISTRY[{name!r}].handler must be callable"
-            )
+            raise RuntimeError(f"_TOOL_REGISTRY[{name!r}].handler must be callable")
         if not isinstance(entry.get("annotations"), dict):
-            raise RuntimeError(
-                f"_TOOL_REGISTRY[{name!r}].annotations must be a dict"
-            )
+            raise RuntimeError(f"_TOOL_REGISTRY[{name!r}].annotations must be a dict")
 
 
 _validate_tool_registry()
@@ -11453,9 +11219,7 @@ def _mcp_handle_tools_call(params: dict[str, Any]) -> dict[str, Any]:
         raise MCPInvalidParamsError(f"unknown tool {name!r}", path="$.name")
     arguments = params.get("arguments") or {}
     if not isinstance(arguments, dict):
-        raise MCPInvalidParamsError(
-            "arguments must be an object", path="$.arguments"
-        )
+        raise MCPInvalidParamsError("arguments must be an object", path="$.arguments")
     _validate_tool_input_schema(spec["input_schema"], arguments, "$.arguments")
     dry_run = bool(arguments.pop("dry_run", False))
     idempotency_key = arguments.pop("idempotency_key", None)
@@ -11564,9 +11328,7 @@ def _run_mcp_stdio(
                 line = _read_frame(stdin)
             except FrameTooLarge as exc:
                 stdout.write(
-                    _frame_mcp_message(
-                        _mcp_error_response(None, -32600, str(exc))
-                    )
+                    _frame_mcp_message(_mcp_error_response(None, -32600, str(exc)))
                 )
                 stdout.flush()
                 continue
@@ -11636,9 +11398,7 @@ def _run_mcp_stdio(
                 if method == "tools/call":
                     if is_notification:
                         continue
-                    tool_name = (
-                        params.get("name") if isinstance(params, dict) else None
-                    )
+                    tool_name = params.get("name") if isinstance(params, dict) else None
                     future = executor.submit(_mcp_handle_tools_call, params)
                     try:
                         result = future.result(timeout=MURAL_TOOL_TIMEOUT_SECS)
@@ -12075,9 +11835,7 @@ def _add_resource_subcommands(sub: argparse._SubParsersAction) -> None:
     room_get.add_argument("--room", required=True, help="Room id")
     _add_output_flags(room_get)
     room_get.set_defaults(func=_cmd_room_get)
-    room_create = room_sub.add_parser(
-        "create", help="Create a room in a workspace"
-    )
+    room_create = room_sub.add_parser("create", help="Create a room in a workspace")
     room_create.add_argument("--workspace", default=None, help="Workspace id")
     room_create.add_argument("--name", required=True, help="Room name")
     room_create.add_argument(
@@ -12104,9 +11862,7 @@ def _add_resource_subcommands(sub: argparse._SubParsersAction) -> None:
     _add_output_flags(mural_get)
     mural_get.set_defaults(func=_cmd_mural_get)
 
-    mural_create = mural_sub.add_parser(
-        "create", help="Create a mural in a room"
-    )
+    mural_create = mural_sub.add_parser("create", help="Create a mural in a room")
     mural_create.add_argument("--room", required=True, help="Room id (integer)")
     mural_create.add_argument("--title", required=True, help="Mural title")
     _add_output_flags(mural_create)
@@ -12212,9 +11968,7 @@ def _add_resource_subcommands(sub: argparse._SubParsersAction) -> None:
     tpl_list = template_sub.add_parser(
         "list", help="List known templates from the local registry"
     )
-    tpl_list.add_argument(
-        "--workspace", default=None, help="Optional workspace filter"
-    )
+    tpl_list.add_argument("--workspace", default=None, help="Optional workspace filter")
     _add_output_flags(tpl_list)
     tpl_list.set_defaults(func=_cmd_template_list)
 
@@ -12288,10 +12042,7 @@ def _add_resource_subcommands(sub: argparse._SubParsersAction) -> None:
     w_update_bulk.add_argument(
         "--file",
         required=True,
-        help=(
-            "Path to a JSON file containing an array of "
-            "`{widget_id, body}` entries"
-        ),
+        help=("Path to a JSON file containing an array of `{widget_id, body}` entries"),
     )
     w_update_bulk.add_argument(
         "--atomic",
@@ -12519,16 +12270,10 @@ def _add_resource_subcommands(sub: argparse._SubParsersAction) -> None:
         _p.add_argument(
             "--cell-height", type=float, default=None, help="Optional cell height"
         )
-        _p.add_argument(
-            "--gutter", type=float, default=None, help="Optional gutter"
-        )
-        _p.add_argument(
-            "--origin", default=None, help='Optional origin "x,y"'
-        )
+        _p.add_argument("--gutter", type=float, default=None, help="Optional gutter")
+        _p.add_argument("--origin", default=None, help='Optional origin "x,y"')
         if _needs_columns:
-            _p.add_argument(
-                "--columns", type=int, required=True, help="Column count"
-            )
+            _p.add_argument("--columns", type=int, required=True, help="Column count")
         _add_output_flags(_p)
         _p.set_defaults(func=_func)
 
@@ -12540,9 +12285,7 @@ def _add_resource_subcommands(sub: argparse._SubParsersAction) -> None:
     )
     c_boot.add_argument("--workspace", required=True, help="Workspace id")
     c_boot.add_argument("--room", required=True, help="Room id")
-    c_boot.add_argument(
-        "--method", type=int, required=True, help="Method number 1..9"
-    )
+    c_boot.add_argument("--method", type=int, required=True, help="Method number 1..9")
     c_boot.add_argument("--title", default=None, help="Optional mural title")
     c_boot.add_argument(
         "--override-path",
@@ -12567,9 +12310,7 @@ def _add_resource_subcommands(sub: argparse._SubParsersAction) -> None:
     )
     c_pop.add_argument("--mural", required=True, help="Mural id")
     c_pop.add_argument("--area", required=True, help="Area id")
-    c_pop.add_argument(
-        "--method", type=int, required=True, help="Method number 1..9"
-    )
+    c_pop.add_argument("--method", type=int, required=True, help="Method number 1..9")
     c_pop.add_argument("--section", required=True, help="Section name")
     c_pop.add_argument(
         "--items",
@@ -12601,9 +12342,7 @@ def _add_resource_subcommands(sub: argparse._SubParsersAction) -> None:
     _add_output_flags(c_park)
     c_park.set_defaults(func=_cmd_compose_parking_lot_sweep)
 
-    c_sum = compose_sub.add_parser(
-        "workspace-summary", help="Summarize a workspace"
-    )
+    c_sum = compose_sub.add_parser("workspace-summary", help="Summarize a workspace")
     c_sum.add_argument("--workspace", default=None, help="Workspace id")
     _add_output_flags(c_sum)
     c_sum.set_defaults(func=_cmd_compose_workspace_summary)
@@ -12619,9 +12358,7 @@ def _add_resource_subcommands(sub: argparse._SubParsersAction) -> None:
     l_lookup.add_argument(
         "--method", type=int, default=None, help="Filter by DT method (1..9)"
     )
-    l_lookup.add_argument(
-        "--section", default=None, help="Filter by section name"
-    )
+    l_lookup.add_argument("--section", default=None, help="Filter by section name")
     _add_output_flags(l_lookup)
     l_lookup.set_defaults(func=_cmd_mural_lineage_lookup)
 
@@ -12843,17 +12580,13 @@ def _add_resource_subcommands(sub: argparse._SubParsersAction) -> None:
     _add_output_flags(v_close)
     v_close.set_defaults(func=_cmd_voting_session_close)
 
-    v_delete = voting_sub.add_parser(
-        "session-delete", help="Delete a voting session"
-    )
+    v_delete = voting_sub.add_parser("session-delete", help="Delete a voting session")
     v_delete.add_argument("--mural", required=True, help="Mural id")
     v_delete.add_argument("--session", required=True, help="Voting session id")
     _add_output_flags(v_delete)
     v_delete.set_defaults(func=_cmd_voting_session_delete)
 
-    v_results = voting_sub.add_parser(
-        "results", help="Fetch voting session results"
-    )
+    v_results = voting_sub.add_parser("results", help="Fetch voting session results")
     v_results.add_argument("--mural", required=True, help="Mural id")
     v_results.add_argument("--session", required=True, help="Voting session id")
     _add_output_flags(v_results)

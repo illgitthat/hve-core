@@ -708,6 +708,7 @@ def test_spatial_sort_along_axis_format_table_emits_table(
     # Table output contains both ids in sorted (a before b) order.
     assert out.index("a") < out.index("b")
 
+
 # ---------------------------------------------------------------------------
 # arrow-graph: format selection, snap-radius, output redirection
 # ---------------------------------------------------------------------------
@@ -716,12 +717,20 @@ def test_spatial_sort_along_axis_format_table_emits_table(
 def _ag_widgets() -> list[dict[str, Any]]:
     return [
         {
-            "id": "a", "type": "shape",
-            "x": 0.0, "y": 0.0, "width": 10.0, "height": 10.0,
+            "id": "a",
+            "type": "shape",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 10.0,
+            "height": 10.0,
         },
         {
-            "id": "b", "type": "shape",
-            "x": 100.0, "y": 0.0, "width": 10.0, "height": 10.0,
+            "id": "b",
+            "type": "shape",
+            "x": 100.0,
+            "y": 0.0,
+            "width": 10.0,
+            "height": 10.0,
         },
         {
             "id": "e1",
@@ -740,9 +749,7 @@ def test_spatial_arrow_graph_default_format_is_summary_json(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     _patch_paginate(monkeypatch, mural_module, _ag_widgets())
-    rc = mural_module.main(
-        ["spatial", "arrow-graph", "--mural-id", TEST_MURAL_ID]
-    )
+    rc = mural_module.main(["spatial", "arrow-graph", "--mural-id", TEST_MURAL_ID])
     assert rc == mural_module.EXIT_SUCCESS
     payload = json.loads(capsys.readouterr().out)
     assert sorted(payload["nodes"]) == ["a", "b"]
@@ -792,7 +799,7 @@ def test_spatial_arrow_graph_format_dot_emits_digraph_text(
     assert rc == mural_module.EXIT_SUCCESS
     out = capsys.readouterr().out
     assert out.lstrip().startswith("digraph")
-    assert "\"a\"" in out and "\"b\"" in out
+    assert '"a"' in out and '"b"' in out
     assert "->" in out
 
 
@@ -803,12 +810,20 @@ def test_spatial_arrow_graph_snap_radius_too_small_drops_edge(
 ) -> None:
     widgets = [
         {
-            "id": "a", "type": "shape",
-            "x": 0.0, "y": 0.0, "width": 10.0, "height": 10.0,
+            "id": "a",
+            "type": "shape",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 10.0,
+            "height": 10.0,
         },
         {
-            "id": "b", "type": "shape",
-            "x": 100.0, "y": 0.0, "width": 10.0, "height": 10.0,
+            "id": "b",
+            "type": "shape",
+            "x": 100.0,
+            "y": 0.0,
+            "width": 10.0,
+            "height": 10.0,
         },
         {
             "id": "e1",

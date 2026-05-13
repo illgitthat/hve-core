@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: MIT
 """Exception classes for the Mural CLI/MCP package.
 
 All custom exception types live here so submodules can raise / catch them

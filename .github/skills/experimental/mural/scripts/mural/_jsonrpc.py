@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: MIT
 """MCP JSON-RPC framing helpers for the Mural package.
 
 Carved from ``mural.__init__`` per the modularization plan. Helpers stay

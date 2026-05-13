@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: MIT
 """Tag manifest, merge, and authorship helper implementations."""
 
 from __future__ import annotations
@@ -15,9 +17,7 @@ def _is_tag_cap_error_impl(
 ) -> bool:
     if exc.status != 400:
         return False
-    haystack = " ".join(
-        str(part).lower() for part in (exc.code, exc.message) if part
-    )
+    haystack = " ".join(str(part).lower() for part in (exc.code, exc.message) if part)
     return any(hint in haystack for hint in tag_cap_hints)
 
 

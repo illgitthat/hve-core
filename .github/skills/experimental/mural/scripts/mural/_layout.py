@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: MIT
 """Layout engines and session-manifest helpers for the Mural package.
 
 Carved from ``mural.__init__`` per the modularization plan. Helpers that
@@ -371,9 +374,7 @@ def _repair_tag_drift(mural_id: str) -> list[dict[str, Any]]:
     for mid, widget_id in keys:
         intended_text = _SessionManifest.get((mid, widget_id), set())
         intended_ids = {
-            tag_text_to_id[text]
-            for text in intended_text
-            if text in tag_text_to_id
+            tag_text_to_id[text] for text in intended_text if text in tag_text_to_id
         }
         try:
             widget = _authenticated_request("GET", f"/murals/{mid}/widgets/{widget_id}")

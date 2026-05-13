@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: MIT
 """MCP stdio server loop extracted from the mural facade."""
 
 from __future__ import annotations

@@ -3574,9 +3574,7 @@ def _confirmation_consume(*, tool: str, confirmed_id: str) -> dict[str, Any]:
             "confirmation_id_mismatch: no pending preview for this id"
         )
     if entry["expires_at"] < time.time():
-        raise MuralValidationError(
-            "confirmation_id_mismatch: preview expired"
-        )
+        raise MuralValidationError("confirmation_id_mismatch: preview expired")
     if entry["tool"] != tool:
         raise MuralValidationError(
             "confirmation_id_mismatch: tool name does not match preview"
@@ -4827,9 +4825,7 @@ def _resolve_widget_update_body(args: argparse.Namespace) -> dict[str, Any]:
     inline = getattr(args, "body", None)
     file_arg = getattr(args, "body_file", None)
     if inline and file_arg:
-        raise MuralValidationError(
-            "provide either --body or --body-file, not both"
-        )
+        raise MuralValidationError("provide either --body or --body-file, not both")
     if file_arg:
         body = _parse_json_arg(_load_payload_file(file_arg), "--body-file")
     elif inline:
@@ -4891,9 +4887,7 @@ def _parse_parent_id(value: str) -> str:
     widget).
     """
     if not isinstance(value, str) or not value.strip():
-        raise argparse.ArgumentTypeError(
-            "--parent-id must be a non-empty string"
-        )
+        raise argparse.ArgumentTypeError("--parent-id must be a non-empty string")
     return value.strip()
 
 
@@ -4969,13 +4963,14 @@ def _verify_parent_containment(
             "area_chain_ids": [],
             "via": None,
             "recommendation": (
-                f"could not read widget {widget_id} back to verify "
-                f"containment: {exc}"
+                f"could not read widget {widget_id} back to verify containment: {exc}"
             ),
         }
     inner = record.get("value") if isinstance(record, dict) else None
-    widget = inner if isinstance(inner, dict) else (
-        record if isinstance(record, dict) else {}
+    widget = (
+        inner
+        if isinstance(inner, dict)
+        else (record if isinstance(record, dict) else {})
     )
     persisted_parent = widget.get("parentId")
     area_chain = (
@@ -5075,9 +5070,7 @@ def _cmd_widget_update(args: argparse.Namespace) -> int:
     record = _patch_widget_or_disambiguate_404(mural_id, args.widget, body)
     expected_parent = body.get("parentId") if isinstance(body, dict) else None
     if isinstance(expected_parent, str) and expected_parent:
-        verdict = _verify_parent_containment(
-            mural_id, args.widget, expected_parent
-        )
+        verdict = _verify_parent_containment(mural_id, args.widget, expected_parent)
         _attach_containment_to_record(record, verdict)
         if not _is_containment_success(verdict["verdict"]):
             _emit_record(record, args)
@@ -5103,9 +5096,7 @@ def _create_widget(
     if expected_parent:
         widget_id = _resolve_widget_id(record)
         if widget_id:
-            verdict = _verify_parent_containment(
-                mural_id, widget_id, expected_parent
-            )
+            verdict = _verify_parent_containment(mural_id, widget_id, expected_parent)
             _attach_containment_to_record(record, verdict)
             if not _is_containment_success(verdict["verdict"]):
                 _emit_record(record, args)

@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: MIT
 """Credential resolution helpers (leaves only at this stage).
 
 Backend classes (``KeyringBackend``, ``FileBackend``, ``_NullBackend``,

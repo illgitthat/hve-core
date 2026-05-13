@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: MIT
 """Loopback OAuth 2.0 + PKCE login flow for the Mural CLI.
 
 Carved from ``mural/__init__.py`` (Step 5.2 of the modularization plan).

@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: MIT
 """Validation, projection, pagination, and body-builder helpers.
 
 Carved from ``mural.__init__`` per the modularization plan. ``_paginate``
@@ -213,6 +216,7 @@ def _paginate(
         if next_token is not None:
             page_params["next"] = next_token
         from . import _authenticated_request as _auth
+
         response = _auth(method, path, params=page_params, **request_kwargs)
         pages += 1
         if isinstance(response, dict) and "value" in response:

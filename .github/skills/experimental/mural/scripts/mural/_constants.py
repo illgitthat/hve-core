@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: MIT
 """Module-level constants for the Mural CLI/MCP package.
 
 Frozen literals, env-var name registry, redaction patterns, and other

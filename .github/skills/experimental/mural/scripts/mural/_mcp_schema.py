@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: MIT
 """MCP tool input schema helpers extracted from the mural facade."""
 
 from __future__ import annotations
@@ -193,6 +196,4 @@ def _validate_tool_registry(tool_registry: dict[str, dict[str, Any]]) -> None:
         if not callable(entry.get("handler")):
             raise RuntimeError(f"tool_registry[{name!r}].handler must be callable")
         if not isinstance(entry.get("annotations"), dict):
-            raise RuntimeError(
-                f"tool_registry[{name!r}].annotations must be a dict"
-            )
+            raise RuntimeError(f"tool_registry[{name!r}].annotations must be a dict")

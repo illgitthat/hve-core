@@ -1,0 +1,10 @@
+{
+  "label": "Responsible AI",
+  "position": 10,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "doc",
+    "id": "rai/README"
+  }
+}

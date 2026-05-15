@@ -208,12 +208,12 @@ Avoid automation bias. Agent suggestions should be read as starting points for h
 ## Learn more about HVE Core
 
 * [HVE Core repository (microsoft/hve-core)](https://github.com/microsoft/hve-core)
-* [Documentation index](../../README.md)
-* [Contributing guidelines](../../contributing/README.md)
-* [Architecture overview](../../architecture/README.md)
-* [Custom agents](../../contributing/custom-agents.md)
-* [Skills overview](../../contributing/skills.md)
-* [Roadmap](../../contributing/ROADMAP.md)
+* [Documentation index](../../../README.md)
+* [Contributing guidelines](../../../contributing/README.md)
+* [Architecture overview](../../../architecture/README.md)
+* [Custom agents](../../../contributing/custom-agents.md)
+* [Skills overview](../../../contributing/skills.md)
+* [Roadmap](../../../contributing/ROADMAP.md)
 
 Issues, feedback, and Responsible AI concerns: open a GitHub issue at [microsoft/hve-core](https://github.com/microsoft/hve-core/issues) using the relevant issue template.
 
@@ -226,7 +226,7 @@ The five appendices below cover the agents and skills that the May 2026 RAI asse
 * **Agent file:** `.github/agents/rai-planning/rai-planner.agent.md`
 * **Purpose:** Walks an authoring team through a six-phase Responsible AI assessment workflow. Produces drafts of risk-classification screening, standards mapping, security model addendum, control surface catalog, evidence register, tradeoffs log, threat addendum, RAI review summary, and a backlog handoff.
 * **Inputs:** Operator-supplied system definition, stakeholder context, and prior assessment artifacts (when present). Reads instruction files under `.github/instructions/rai-planning/`.
-* **Outputs:** Markdown artifacts under `.copilot-tracking/rai-plans/{project}/` plus, on user direction, published artifacts under `docs/rai/{project}-{YYYY-MM}/`. All outputs carry an "AI-assisted content; review and validate before use" footer.
+* **Outputs:** Markdown artifacts under `.copilot-tracking/rai-plans/{project}/` plus, on user direction, published artifacts under `docs/planning/rai/{project}-{YYYY-MM}/`. All outputs carry an "AI-assisted content; review and validate before use" footer.
 * **Intended uses:** Drafting the structural scaffolding of a Responsible AI assessment for review by a qualified RAI reviewer or board. Maintaining session state and resuming an in-progress assessment.
 * **Specific limitations:** The agent does not approve, certify, or sign off on Responsible AI assessments. Drafts must be reviewed by a qualified reviewer (RAI champion, Office of Responsible AI, ethics committee, legal, or compliance) before any use that would carry weight in a real decision. The agent's own framework knowledge is bounded by its embedded standards instructions; it is not a substitute for current regulatory or organizational guidance. The agent does not pull live regulatory updates.
 * **Specific considerations:** Treat every output as a draft. Do not promote a draft to "approved" status. The agent surfaces tradeoffs and concern levels as suggested reads; rating a risk as Low or Moderate is the reviewer's decision, not the agent's.

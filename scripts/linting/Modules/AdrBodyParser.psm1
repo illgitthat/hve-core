@@ -15,16 +15,17 @@
 function Remove-AdrFencedCodeBlocks {
     <#
     .SYNOPSIS
-        Removes fenced code blocks from ADR body text.
+        Removes fenced code blocks and inline code spans from ADR body text.
     .DESCRIPTION
         Strips ``` and ~~~ delimited fenced code blocks line-by-line so downstream
         section parsers do not pick up bullets, headings, or path tokens that appear
         inside code samples. Fences are matched on the trimmed line start to tolerate
-        leading whitespace inside lists.
+        leading whitespace inside lists. Single-backtick inline code spans are also
+        removed so path-shaped tokens inside `code` do not leak into rule scans.
     .PARAMETER Text
         The raw ADR body text (frontmatter already stripped).
     .OUTPUTS
-        The same text with fenced code-block lines removed.
+        The same text with fenced code-block lines and inline code spans removed.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -60,7 +61,7 @@ function Remove-AdrFencedCodeBlocks {
         }
     }
 
-    return $sb.ToString()
+    return ($sb.ToString() -replace '`[^`]*`', '')
 }
 
 function Get-AdrH2Section {

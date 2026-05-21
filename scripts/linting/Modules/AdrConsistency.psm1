@@ -41,33 +41,6 @@ $script:UpstreamLabels = @('BRD', 'PRD', 'RPI')
 
 #region Helpers
 
-function Remove-AdrFencedCodeBlocks {
-    <#
-    .SYNOPSIS
-        Strips fenced code blocks and inline code spans from ADR text.
-    .DESCRIPTION
-        Removes triple-backtick fenced code blocks and single-backtick inline
-        code spans so rule scans do not pick up examples inside code samples.
-    .PARAMETER Text
-        Markdown text fragment.
-    .OUTPUTS
-        [string] Text with fenced code blocks and inline code spans removed.
-    .EXAMPLE
-        Remove-AdrFencedCodeBlocks -Text $section.Text
-    #>
-    [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [AllowEmptyString()]
-        [string]$Text
-    )
-
-    if ([string]::IsNullOrEmpty($Text)) { return $Text }
-    $stripped = [regex]::Replace($Text, '(?ms)^```.*?^```\s*$', '')
-    return ($stripped -replace '`[^`]*`', '')
-}
-
 function Resolve-AdrTitleCase {
     <#
     .SYNOPSIS

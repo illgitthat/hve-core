@@ -167,7 +167,7 @@ function Resolve-AdrFiles {
     $filtered = New-Object System.Collections.Generic.List[string]
     foreach ($file in $resolved) {
         $rel = $file
-        if ($file.StartsWith($RepoRoot)) {
+        if ($file.StartsWith($RepoRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
             $rel = $file.Substring($RepoRoot.Length).TrimStart('\', '/').Replace('\', '/')
         }
         $excluded = $false
@@ -181,6 +181,34 @@ function Resolve-AdrFiles {
 }
 
 function Invoke-AdrConsistencyValidator {
+    <#
+    .SYNOPSIS
+        Orchestrates ADR consistency validation across a resolved file set.
+    .DESCRIPTION
+        Resolves target ADR files via Resolve-AdrFiles, invokes the AdrConsistency
+        module rule registry on each file, aggregates violations, emits CI
+        annotations and a step summary when running in CI, writes a JSON report
+        to -OutputPath, and returns a report object whose ExitCode property
+        reflects error and (optionally) warning severity counts.
+    .PARAMETER Paths
+        Directory or file paths to scan recursively for ADR markdown.
+    .PARAMETER Files
+        Explicit set of files to validate; takes precedence over -Paths.
+    .PARAMETER ExcludePaths
+        Wildcard patterns (repo-relative) that exclude matching files.
+    .PARAMETER ChangedFilesOnly
+        Limit the scan to markdown files changed against -BaseBranch.
+    .PARAMETER BaseBranch
+        Branch reference used by -ChangedFilesOnly for the changed-file diff.
+    .PARAMETER OutputPath
+        Destination JSON report path; parent directory is created if missing.
+    .PARAMETER WarningsAsErrors
+        Treat warn-severity violations as failures in the returned ExitCode.
+    .OUTPUTS
+        [pscustomobject] with summary, violations, and ExitCode properties.
+    .EXAMPLE
+        Invoke-AdrConsistencyValidator -Paths @('docs/planning/adrs/') -OutputPath 'logs/adr-consistency-results.json'
+    #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]
     param(
@@ -202,7 +230,7 @@ function Invoke-AdrConsistencyValidator {
         $result = Invoke-AdrConsistencyValidation -Path $file -RepoRoot $repoRoot
         foreach ($v in $result.Violations) {
             $relFile = $v.file
-            if ($relFile.StartsWith($repoRoot)) {
+            if ($relFile.StartsWith($repoRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
                 $relFile = $relFile.Substring($repoRoot.Length).TrimStart('\', '/').Replace('\', '/')
             }
             $null = $allViolations.Add([pscustomobject]@{

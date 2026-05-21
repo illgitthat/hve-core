@@ -62,15 +62,34 @@ Describe 'Resolve-AdrFiles' -Tag 'Unit' {
         $result | Should -BeNullOrEmpty
         $warnings.Count | Should -BeGreaterThan 0
     }
+
+    It 'limits changed files to supplied paths' {
+        Mock Get-ChangedFilesFromGit {
+            @(
+                'scripts/tests/linting/fixtures/adr-consistency/affected-components-mirror/pass.md',
+                'README.md'
+            )
+        }
+
+        $result = Resolve-AdrFiles -Paths @('scripts/tests/linting/fixtures/adr-consistency') `
+            -ExcludePaths @() -ChangedFilesOnly -RepoRoot $script:RepoRoot -BaseBranch 'origin/main'
+
+        $result | Should -HaveCount 1
+        $result[0] | Should -Match 'affected-components-mirror'
+    }
 }
 
 Describe 'Invoke-AdrConsistencyValidator' -Tag 'Unit' {
     BeforeEach {
         $script:OutPath = Join-Path ([System.IO.Path]::GetTempPath()) ("adr-consistency-{0}.json" -f [Guid]::NewGuid())
+        $script:SarifPath = Join-Path ([System.IO.Path]::GetTempPath()) ("adr-consistency-{0}.sarif" -f [Guid]::NewGuid())
+        $script:ProcessOutputPath = Join-Path ([System.IO.Path]::GetTempPath()) ("adr-consistency-{0}.log" -f [Guid]::NewGuid())
     }
 
     AfterEach {
         if (Test-Path -LiteralPath $script:OutPath) { Remove-Item -LiteralPath $script:OutPath -Force }
+        if (Test-Path -LiteralPath $script:SarifPath) { Remove-Item -LiteralPath $script:SarifPath -Force }
+        if (Test-Path -LiteralPath $script:ProcessOutputPath) { Remove-Item -LiteralPath $script:ProcessOutputPath -Force }
     }
 
     It 'returns ExitCode 0 and writes JSON report when all fixtures pass' {
@@ -95,5 +114,38 @@ Describe 'Invoke-AdrConsistencyValidator' -Tag 'Unit' {
         $report.summary.errorCount | Should -BeGreaterThan 0
         $report.ExitCode | Should -Be 1
         ($report.violations | Where-Object { $_.ruleId -eq 'ADR-CONSISTENCY-002' }).Count | Should -BeGreaterThan 0
+    }
+
+    It 'writes SARIF report when SARIF output path is provided' {
+        $failFile = 'scripts/tests/linting/fixtures/adr-consistency/success-criteria-source-resolves/fail.md'
+        $report = Invoke-AdrConsistencyValidator -Paths @() -Files @($failFile) -ExcludePaths @() `
+            -ChangedFilesOnly:$false -BaseBranch 'origin/main' -OutputPath $script:OutPath `
+            -SarifOutputPath $script:SarifPath -WarningsAsErrors:$false
+
+        $report.ExitCode | Should -Be 1
+        Test-Path -LiteralPath $script:SarifPath | Should -BeTrue
+        $sarif = Get-Content -LiteralPath $script:SarifPath -Raw | ConvertFrom-Json
+        $sarif.version | Should -Be '2.1.0'
+        $sarif.'$schema' | Should -Be 'https://json.schemastore.org/sarif-2.1.0.json'
+        $sarif.runs[0].tool.driver.name | Should -Be 'ADR Consistency Validator'
+        ($sarif.runs[0].results | Where-Object { $_.ruleId -eq 'ADR-CONSISTENCY-002' }).Count | Should -BeGreaterThan 0
+        $sarif.runs[0].results[0].locations[0].physicalLocation.artifactLocation.uri | Should -Not -BeNullOrEmpty
+        $sarif.runs[0].results[0].locations[0].physicalLocation.region.startLine | Should -BeGreaterThan 0
+    }
+
+    It 'supports CLI invocation with JSON and SARIF outputs' {
+        $failFile = 'scripts/tests/linting/fixtures/adr-consistency/success-criteria-source-resolves/fail.md'
+        $pwsh = (Get-Command pwsh).Source
+
+        & $pwsh -NoProfile -File $script:ScriptPath -Files $failFile `
+            -OutputPath $script:OutPath -SarifOutputPath $script:SarifPath *> $script:ProcessOutputPath
+
+        $LASTEXITCODE | Should -Be 1
+        Test-Path -LiteralPath $script:OutPath | Should -BeTrue
+        Test-Path -LiteralPath $script:SarifPath | Should -BeTrue
+        $json = Get-Content -LiteralPath $script:OutPath -Raw | ConvertFrom-Json
+        $sarif = Get-Content -LiteralPath $script:SarifPath -Raw | ConvertFrom-Json
+        ($json.violations | Where-Object { $_.ruleId -eq 'ADR-CONSISTENCY-002' }).Count | Should -BeGreaterThan 0
+        ($sarif.runs[0].results | Where-Object { $_.ruleId -eq 'ADR-CONSISTENCY-002' }).Count | Should -BeGreaterThan 0
     }
 }
